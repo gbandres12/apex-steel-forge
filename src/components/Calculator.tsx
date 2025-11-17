@@ -11,9 +11,11 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Slider } from "@/components/ui/slider";
+import { useNavigate } from "react-router-dom";
 import { toast } from "sonner";
 
 export const Calculator = () => {
+  const navigate = useNavigate();
   const [projectType, setProjectType] = useState("");
   const [area, setArea] = useState([500]);
   const [deadline, setDeadline] = useState("");
@@ -55,6 +57,19 @@ export const Calculator = () => {
         </div>
 
         <Card className="max-w-4xl mx-auto p-8 bg-card border-border">
+          <div className="mb-6 text-center">
+            <Button 
+              onClick={() => navigate("/simulador")}
+              size="lg"
+              className="shadow-glow"
+            >
+              Abrir Simulador 3D Completo
+            </Button>
+            <p className="text-sm text-muted-foreground mt-2">
+              Visualize seu galpão em 3D e configure cada detalhe
+            </p>
+          </div>
+
           <div className="grid md:grid-cols-2 gap-8">
             {/* Input Section */}
             <div className="space-y-6">
