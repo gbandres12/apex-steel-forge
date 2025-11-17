@@ -1,22 +1,34 @@
 import { useRef } from "react";
 import { Canvas } from "@react-three/fiber";
-import { OrbitControls, Grid } from "@react-three/drei";
+import { OrbitControls } from "@react-three/drei";
 import { useShed } from "@/contexts/ShedContext";
 import * as THREE from "three";
+import { RectangularTruss } from "./RectangularTruss";
+import { Environment } from "./Environment";
 
 const ShedStructure = () => {
   const { config } = useShed();
   const structureColor = "#8B0000"; // Vermelho escuro
   const roofColor = config.roofType === "termoacustica" ? "#C0C0C0" : "#808080";
 
-  const pillarCount = Math.ceil(config.length / 5); // Pilares a cada 5m
+  const pillarSpacing = 6; // Pilares a cada 6m (múltiplos de 6)
+  const pillarCount = Math.ceil(config.length / pillarSpacing) + 1;
   const pillarPositions: [number, number, number][] = [];
 
-  // Posições dos pilares nas quatro quinas
+  // Posições dos pilares nas laterais
   for (let i = 0; i < pillarCount; i++) {
-    const x = (i / (pillarCount - 1)) * config.length - config.length / 2;
+    const x = (i * pillarSpacing) - config.length / 2;
     pillarPositions.push([x, config.height / 2, -config.width / 2]);
     pillarPositions.push([x, config.height / 2, config.width / 2]);
+  }
+
+  // Número de treliças (uma a cada 6m)
+  const trussCount = Math.floor(config.length / 6);
+  const trussPositions: [number, number, number][] = [];
+  
+  for (let i = 0; i < trussCount; i++) {
+    const x = (i * 6) - config.length / 2 + 3; // Centralizar entre pilares
+    trussPositions.push([x, config.height + 0.75, 0]);
   }
 
   return (
@@ -39,9 +51,9 @@ const ShedStructure = () => {
         <meshStandardMaterial color={structureColor} />
       </mesh>
 
-      {/* Vigas transversais */}
+      {/* Vigas transversais nas posições dos pilares */}
       {Array.from({ length: pillarCount }).map((_, i) => {
-        const x = (i / (pillarCount - 1)) * config.length - config.length / 2;
+        const x = (i * pillarSpacing) - config.length / 2;
         return (
           <mesh key={`beam-${i}`} position={[x, config.height, 0]}>
             <boxGeometry args={[0.3, 0.3, config.width]} />
@@ -50,9 +62,19 @@ const ShedStructure = () => {
         );
       })}
 
-      {/* Cobertura */}
-      <mesh position={[0, config.height + 1, 0]} rotation={[0, 0, 0]}>
-        <boxGeometry args={[config.length, 0.1, config.width]} />
+      {/* Treliças retangulares */}
+      {trussPositions.map((pos, idx) => (
+        <RectangularTruss 
+          key={`truss-${idx}`}
+          width={config.width}
+          height={1.5}
+          position={pos}
+        />
+      ))}
+
+      {/* Cobertura - levemente acima das treliças */}
+      <mesh position={[0, config.height + 1.6, 0]} rotation={[0, 0, 0]} castShadow receiveShadow>
+        <boxGeometry args={[config.length, 0.08, config.width]} />
         <meshStandardMaterial color={roofColor} side={THREE.DoubleSide} />
       </mesh>
 
@@ -111,41 +133,43 @@ export const ShedVisualizer = () => {
   const maxDimension = Math.max(config.length, config.width, config.height);
 
   return (
-    <div className="w-full h-full bg-gradient-to-b from-sky-200 to-sky-100">
+    <div className="w-full h-full bg-gradient-to-b from-sky-300 to-sky-100">
       <Canvas
+        shadows
         camera={{
-          position: [maxDimension * 1.5, maxDimension * 0.8, maxDimension * 1.5],
+          position: [maxDimension * 1.8, maxDimension * 1.2, maxDimension * 1.8],
           fov: 50,
         }}
       >
-        {/* Iluminação */}
-        <ambientLight intensity={0.6} />
-        <directionalLight position={[10, 20, 10]} intensity={1} castShadow />
-        <directionalLight position={[-10, 10, -10]} intensity={0.5} />
+        {/* Iluminação melhorada com sombras */}
+        <ambientLight intensity={0.5} />
+        <directionalLight 
+          position={[50, 50, 30]} 
+          intensity={1.2} 
+          castShadow
+          shadow-mapSize-width={2048}
+          shadow-mapSize-height={2048}
+          shadow-camera-far={200}
+          shadow-camera-left={-50}
+          shadow-camera-right={50}
+          shadow-camera-top={50}
+          shadow-camera-bottom={-50}
+        />
+        <directionalLight position={[-20, 20, -20]} intensity={0.3} />
+        <hemisphereLight args={["#87CEEB", "#6B8E23", 0.4]} />
 
         {/* Controles de órbita */}
         <OrbitControls
           enablePan={true}
           enableZoom={true}
           enableRotate={true}
-          minDistance={5}
-          maxDistance={maxDimension * 3}
+          minDistance={10}
+          maxDistance={maxDimension * 4}
+          maxPolarAngle={Math.PI / 2.1} // Limitar rotação para não ir abaixo do chão
         />
 
-        {/* Grid (piso de concreto) */}
-        <Grid
-          args={[config.length * 2, config.width * 2]}
-          cellSize={1}
-          cellThickness={0.5}
-          cellColor="#6f6f6f"
-          sectionSize={5}
-          sectionThickness={1}
-          sectionColor="#8d8d8d"
-          fadeDistance={maxDimension * 3}
-          fadeStrength={1}
-          followCamera={false}
-          position={[0, 0, 0]}
-        />
+        {/* Ambiente (árvores, plantas, terreno) */}
+        <Environment shedLength={config.length} shedWidth={config.width} />
 
         {/* Estrutura do galpão */}
         <ShedStructure />
