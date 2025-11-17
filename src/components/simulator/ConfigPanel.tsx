@@ -39,10 +39,11 @@ export const ConfigPanel = () => {
               <Slider
                 min={6}
                 max={200}
-                step={1}
+                step={6}
                 value={[config.length]}
                 onValueChange={(value) => updateConfig({ length: value[0] })}
               />
+              <p className="text-xs text-muted-foreground mt-1">Múltiplos de 6 metros</p>
             </div>
 
             {/* Largura */}
@@ -56,8 +57,6 @@ export const ConfigPanel = () => {
                   <SelectItem value="10">10m</SelectItem>
                   <SelectItem value="15">15m</SelectItem>
                   <SelectItem value="20">20m</SelectItem>
-                  <SelectItem value="25">25m</SelectItem>
-                  <SelectItem value="30">30m</SelectItem>
                 </SelectContent>
               </Select>
             </div>
@@ -70,12 +69,13 @@ export const ConfigPanel = () => {
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="6">6m</SelectItem>
-                  <SelectItem value="8">8m</SelectItem>
-                  <SelectItem value="10">10m</SelectItem>
-                  <SelectItem value="12">12m</SelectItem>
+                  <SelectItem value="6">6m (padrão)</SelectItem>
+                  <SelectItem value="8">8m (+R$ 140/m²)</SelectItem>
+                  <SelectItem value="10">10m (+R$ 280/m²)</SelectItem>
+                  <SelectItem value="12">12m (+R$ 420/m²)</SelectItem>
                 </SelectContent>
               </Select>
+              <p className="text-xs text-muted-foreground mt-1">Adicional de R$ 70/m² por metro acima de 6m</p>
             </div>
           </AccordionContent>
         </AccordionItem>
@@ -110,15 +110,15 @@ export const ConfigPanel = () => {
           <AccordionContent className="space-y-6 pt-4">
             {/* Tipo de Cobertura */}
             <div>
-              <Label className="text-foreground mb-3 block">Tipo de Cobertura</Label>
+              <Label className="text-foreground mb-3 block">Tipo de Cobertura (sem pintura)</Label>
               <RadioGroup value={config.roofType} onValueChange={(v) => updateConfig({ roofType: v as any })}>
                 <div className="flex items-center space-x-2">
-                  <RadioGroupItem value="comum" id="comum" />
-                  <Label htmlFor="comum" className="cursor-pointer">Telha Comum</Label>
+                  <RadioGroupItem value="metalica" id="metalica" />
+                  <Label htmlFor="metalica" className="cursor-pointer">Telha Metálica Comum 0.43mm (+R$ 40/m²)</Label>
                 </div>
                 <div className="flex items-center space-x-2">
                   <RadioGroupItem value="termoacustica" id="termoacustica" />
-                  <Label htmlFor="termoacustica" className="cursor-pointer">Telha Termoacústica</Label>
+                  <Label htmlFor="termoacustica" className="cursor-pointer">Telha Termoacústica (+R$ 130/m²)</Label>
                 </div>
               </RadioGroup>
             </div>
@@ -176,30 +176,48 @@ export const ConfigPanel = () => {
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="cuiaba">Cuiabá - MT</SelectItem>
-                  <SelectItem value="varzea-grande">Várzea Grande - MT</SelectItem>
-                  <SelectItem value="rondonopolis">Rondonópolis - MT</SelectItem>
-                  <SelectItem value="sinop">Sinop - MT</SelectItem>
-                  <SelectItem value="palmas">Palmas - TO</SelectItem>
+                  <SelectItem value="santarem">Santarém - PA</SelectItem>
+                  <SelectItem value="belem">Belém - PA</SelectItem>
+                  <SelectItem value="manaus">Manaus - AM</SelectItem>
                   <SelectItem value="porto-velho">Porto Velho - RO</SelectItem>
                   <SelectItem value="rio-branco">Rio Branco - AC</SelectItem>
+                  <SelectItem value="palmas">Palmas - TO</SelectItem>
+                  <SelectItem value="cuiaba">Cuiabá - MT</SelectItem>
                 </SelectContent>
               </Select>
             </div>
 
-            {/* Terreno Nivelado */}
+            {/* Já possui terreno */}
             <div>
-              <Label className="text-foreground mb-3 block">O terreno está nivelado?</Label>
-              <RadioGroup value={config.terrainLevel} onValueChange={(v) => updateConfig({ terrainLevel: v as any })}>
+              <Label className="text-foreground mb-3 block">Já possui o terreno?</Label>
+              <RadioGroup value={config.hasTerrain} onValueChange={(v) => updateConfig({ hasTerrain: v as any })}>
                 <div className="flex items-center space-x-2">
-                  <RadioGroupItem value="sim" id="terrain-sim" />
-                  <Label htmlFor="terrain-sim" className="cursor-pointer">Sim</Label>
+                  <RadioGroupItem value="sim" id="has-terrain-sim" />
+                  <Label htmlFor="has-terrain-sim" className="cursor-pointer">Sim</Label>
                 </div>
                 <div className="flex items-center space-x-2">
-                  <RadioGroupItem value="nao" id="terrain-nao" />
-                  <Label htmlFor="terrain-nao" className="cursor-pointer">Não</Label>
+                  <RadioGroupItem value="nao" id="has-terrain-nao" />
+                  <Label htmlFor="has-terrain-nao" className="cursor-pointer">Não</Label>
                 </div>
               </RadioGroup>
+            </div>
+
+            {/* Necessita de Terraplanagem */}
+            <div>
+              <Label className="text-foreground mb-3 block">O terreno necessita de terraplanagem?</Label>
+              <RadioGroup value={config.needsEarthworks} onValueChange={(v) => updateConfig({ needsEarthworks: v as any })}>
+                <div className="flex items-center space-x-2">
+                  <RadioGroupItem value="sim" id="earthworks-sim" />
+                  <Label htmlFor="earthworks-sim" className="cursor-pointer">Sim</Label>
+                </div>
+                <div className="flex items-center space-x-2">
+                  <RadioGroupItem value="nao" id="earthworks-nao" />
+                  <Label htmlFor="earthworks-nao" className="cursor-pointer">Não (já terraplanado)</Label>
+                </div>
+              </RadioGroup>
+              <p className="text-xs text-muted-foreground mt-2">
+                O terreno deve ser entregue terraplanado pelo cliente
+              </p>
             </div>
           </AccordionContent>
         </AccordionItem>
@@ -217,17 +235,29 @@ export const ConfigPanel = () => {
             <div>
               <Label className="text-foreground mb-3 block">Forma de Pagamento</Label>
               <RadioGroup value={config.paymentType} onValueChange={(v) => updateConfig({ paymentType: v as any })}>
-                <div className="flex items-center space-x-2">
-                  <RadioGroupItem value="avista" id="avista" />
-                  <Label htmlFor="avista" className="cursor-pointer">À vista (100%)</Label>
-                </div>
-                <div className="flex items-center space-x-2">
-                  <RadioGroupItem value="50-50" id="50-50" />
-                  <Label htmlFor="50-50" className="cursor-pointer">50% entrada + 50% entrega</Label>
-                </div>
-                <div className="flex items-center space-x-2">
-                  <RadioGroupItem value="30-70" id="30-70" />
-                  <Label htmlFor="30-70" className="cursor-pointer">30% entrada + 70% entrega</Label>
+                <div className="flex flex-col space-y-3">
+                  <div className="flex items-start space-x-2">
+                    <RadioGroupItem value="30-entrada" id="30-entrada" className="mt-1" />
+                    <div>
+                      <Label htmlFor="30-entrada" className="cursor-pointer font-semibold">
+                        Financiamento Próprio - Entrada 30%
+                      </Label>
+                      <p className="text-xs text-muted-foreground">
+                        Restante dividido em medições durante a obra
+                      </p>
+                    </div>
+                  </div>
+                  <div className="flex items-start space-x-2">
+                    <RadioGroupItem value="5-25-medicao" id="5-25-medicao" className="mt-1" />
+                    <div>
+                      <Label htmlFor="5-25-medicao" className="cursor-pointer font-semibold">
+                        Condição Especial - 5% + 25% + Medição
+                      </Label>
+                      <p className="text-xs text-muted-foreground">
+                        5% na assinatura + 25% em 30 dias + restante por medição
+                      </p>
+                    </div>
+                  </div>
                 </div>
               </RadioGroup>
             </div>
