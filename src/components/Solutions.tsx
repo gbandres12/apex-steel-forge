@@ -5,22 +5,22 @@ import civilImg from "@/assets/civil.jpg";
 
 const solutions = [
   {
-    title: "Logística e Indústria",
-    description: "Galpões, Armazéns e Coberturas de Grande Vão",
+    title: "Galpões Industriais & Armazéns",
+    description: "Para quem precisa de vãos livres de até 60m sem pilares internos atrapalhando a operação.",
     image: warehouseImg,
-    highlights: ["Vãos livres até 60m", "Montagem em 30 dias", "ROI em 18 meses"],
+    highlights: ["✓ Vãos livres até 60 metros", "✓ Pé-direito de até 12 metros", "✓ Montagem em 30-45 dias"],
   },
   {
-    title: "Agronegócio",
-    description: "Silos, Tanques e Estruturas para Beneficiamento",
+    title: "Estruturas para o Agro",
+    description: "Silos, barracões e estruturas que aguentam safra após safra sem manutenção cara.",
     image: agroImg,
-    highlights: ["Resistência a intempéries", "Proteção anticorrosiva", "Manutenção mínima"],
+    highlights: ["✓ Resistência a intempéries", "✓ Pintura epóxi anticorrosiva", "✓ Vida útil superior a 30 anos"],
   },
   {
-    title: "Construção Civil",
-    description: "Edifícios Modulares e Estruturas Mistas",
+    title: "Edifícios & Estruturas Mistas",
+    description: "Quando cada centímetro conta: precisão milimétrica para projetos que não toleram erro.",
     image: civilImg,
-    highlights: ["Precisão construtiva", "Flexibilidade arquitetônica", "Sustentabilidade"],
+    highlights: ["✓ Tolerância dimensional de 2mm", "✓ Compatível com concreto armado", "✓ Projetos personalizados"],
   },
 ];
 
@@ -30,10 +30,10 @@ export const Solutions = () => {
       <div className="container mx-auto px-4">
         <div className="text-center mb-16">
           <h2 className="text-4xl md:text-5xl font-bold mb-4">
-            Estruturas para Cada Desafio.
+            Soluções que Resolvem Problemas Reais.
           </h2>
           <p className="text-xl text-steel-light">
-            Nossas Soluções
+            Do Agro à Indústria Pesada
           </p>
         </div>
 

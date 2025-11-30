@@ -2,6 +2,7 @@ import { Hero } from "@/components/Hero";
 import { Differentials } from "@/components/Differentials";
 import { Solutions } from "@/components/Solutions";
 import { Testimonials } from "@/components/Testimonials";
+import { ProjectGallery } from "@/components/ProjectGallery";
 import { Calculator } from "@/components/Calculator";
 import { Footer } from "@/components/Footer";
 
@@ -12,6 +13,7 @@ const Index = () => {
       <Differentials />
       <Solutions />
       <Testimonials />
+      <ProjectGallery />
       <Calculator />
       <Footer />
     </div>

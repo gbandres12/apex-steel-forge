@@ -49,10 +49,10 @@ export const Calculator = () => {
       <div className="container mx-auto px-4">
         <div className="text-center mb-12">
           <h2 className="text-4xl md:text-5xl font-bold mb-4">
-            Descubra Quanto Você Pode Economizar.
+            Descubra em 30 Segundos: <span className="text-primary">Quanto Você Vai Economizar?</span>
           </h2>
           <p className="text-xl text-steel-light">
-            Calculadora de Economia de Obra
+            Compare o custo REAL entre aço e concreto. Os números vão te surpreender.
           </p>
         </div>
 
@@ -63,10 +63,10 @@ export const Calculator = () => {
               size="lg"
               className="shadow-glow"
             >
-              Abrir Simulador 3D Completo
+              🏗️ Montar Meu Galpão em 3D (Grátis)
             </Button>
             <p className="text-sm text-muted-foreground mt-2">
-              Visualize seu galpão em 3D e configure cada detalhe
+              Configure cada detalhe e veja seu projeto antes de investir
             </p>
           </div>
 

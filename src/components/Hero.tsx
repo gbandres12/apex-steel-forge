@@ -25,17 +25,18 @@ export const Hero = () => {
         <div className="max-w-4xl mx-auto space-y-8">
           {/* Problem-Focused Headline */}
           <h1 className="text-4xl md:text-6xl lg:text-7xl font-bold leading-tight">
-            Cansado de <span className="text-primary">Atrasos</span>, <span className="text-primary">Desperdício</span> e{" "}
-            <span className="text-primary">Custos Imprevisíveis</span> na Sua Obra?
+            Sua Obra Está <span className="text-primary">Sangrando Dinheiro</span> com Atrasos e Desperdícios?
           </h1>
 
           {/* Solution Sub-headline */}
           <p className="text-xl md:text-2xl lg:text-3xl text-steel-light leading-relaxed">
-            Almeida Steel: A Engenharia de Estruturas Metálicas que Garante{" "}
-            <span className="font-bold text-foreground">Prazo e Preço</span> com Precisão Digital.
+            Estruturas Metálicas com{" "}
+            <span className="font-bold text-foreground">Preço Fechado em Contrato</span> e Entrega{" "}
+            <span className="font-bold text-primary animate-glow-pulse">Até 40% Mais Rápida</span>.
             <br />
-            Seu Projeto Entregue{" "}
-            <span className="font-bold text-primary animate-glow-pulse">Até 40% Mais Rápido</span>.
+            <span className="text-base md:text-xl">
+              Sem Surpresas. Sem Retrabalhos. Sem Dor de Cabeça.
+            </span>
           </p>
 
           {/* CTA */}
@@ -45,7 +46,7 @@ export const Hero = () => {
               size="lg"
               className="text-lg px-8 py-6 shadow-glow hover:shadow-strong transition-all duration-300 transform hover:scale-105"
             >
-              Calcule Sua Economia Agora (Simulador 3D)
+              🔥 Monte Seu Galpão Agora (Simulador 3D Gratuito)
             </Button>
           </div>
 
@@ -53,15 +54,15 @@ export const Hero = () => {
           <div className="pt-12 flex flex-wrap justify-center gap-8 text-sm text-muted-foreground">
             <div className="flex items-center gap-2">
               <div className="w-2 h-2 bg-primary rounded-full"></div>
-              <span>Certificações ABNT e ISO</span>
+              <span>✅ Financiamento Próprio: Entrada de apenas 5%</span>
             </div>
             <div className="flex items-center gap-2">
               <div className="w-2 h-2 bg-primary rounded-full"></div>
-              <span>Atuação Norte e Centro-Oeste</span>
+              <span>✅ +500 Galpões Entregues no Norte e Centro-Oeste</span>
             </div>
             <div className="flex items-center gap-2">
               <div className="w-2 h-2 bg-primary rounded-full"></div>
-              <span>+500 Projetos Entregues</span>
+              <span>✅ Garantia de Prazo em Contrato</span>
             </div>
           </div>
         </div>
