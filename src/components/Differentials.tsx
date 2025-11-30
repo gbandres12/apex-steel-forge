@@ -5,21 +5,21 @@ import robustnessIcon from "@/assets/robustness-icon.jpg";
 const differentials = [
   {
     icon: speedIcon,
-    title: "Velocidade",
-    headline: "Montagem Rápida",
-    description: "Estruturas pré-fabricadas que reduzem o tempo de obra em semanas.",
+    title: "⚡ 40% Mais Rápido",
+    headline: "Enquanto Obra Convencional Enfrenta Chuva, Você Já Está Operando",
+    description: "Estruturas pré-fabricadas em fábrica. Montagem em campo em semanas, não meses. Menos mão de obra, menos imprevistos.",
   },
   {
     icon: precisionIcon,
-    title: "Economia",
-    headline: "Custo Fixo e Zero Desperdício",
-    description: "Elimine surpresas no orçamento com a precisão do aço.",
+    title: "💰 Zero Surpresas no Orçamento",
+    headline: "Preço Fechado = Sua Margem Protegida",
+    description: "Chega de adicionais por 'imprevistos'. O aço é preciso: o que está no contrato é o que você paga. Ponto final.",
   },
   {
     icon: robustnessIcon,
-    title: "Robustez",
-    headline: "Estruturas Certificadas",
-    description: "Segurança e durabilidade garantidas para os ambientes mais exigentes do Norte e Centro-Oeste.",
+    title: "🛡️ Estrutura que Enfrenta o Clima da Amazônia",
+    headline: "Certificada para os Ambientes Mais Extremos",
+    description: "Proteção anticorrosiva de alto desempenho. Projetada para umidade, calor e chuvas intensas do Norte do Brasil.",
   },
 ];
 
@@ -29,10 +29,10 @@ export const Differentials = () => {
       <div className="container mx-auto px-4">
         <div className="text-center mb-16">
           <h2 className="text-4xl md:text-5xl font-bold mb-4">
-            Precisão Milimétrica, Força Inabalável.
+            Por Que Nossos Clientes Nunca Voltam para o Concreto?
           </h2>
           <p className="text-xl text-steel-light max-w-2xl mx-auto">
-            A Revolução da Construção
+            Três Vantagens Inegociáveis do Aço
           </p>
         </div>
 

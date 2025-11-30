@@ -7,9 +7,9 @@ export const Footer = () => {
         <div className="grid md:grid-cols-4 gap-8 mb-8">
           {/* Brand */}
           <div className="space-y-4">
-            <h3 className="text-2xl font-bold text-primary">Almeida Steel</h3>
+            <h3 className="text-2xl font-bold text-primary">Almeida Engenharia</h3>
             <p className="text-sm text-muted-foreground">
-              O Futuro da Construção é Feito de Aço.
+              <strong>O Aço que Constrói o Norte.</strong>
             </p>
           </div>
 
@@ -41,11 +41,11 @@ export const Footer = () => {
             <ul className="space-y-3 text-sm text-muted-foreground">
               <li className="flex items-center gap-2">
                 <Phone className="w-4 h-4 text-primary" />
-                <span>(XX) XXXX-XXXX</span>
+                <span>(93) 99191-0861</span>
               </li>
               <li className="flex items-center gap-2">
                 <Mail className="w-4 h-4 text-primary" />
-                <span>contato@almeidasteel.com.br</span>
+                <span>contato@almeidaengenharia.com.br</span>
               </li>
               <li className="flex items-start gap-2">
                 <MapPin className="w-4 h-4 text-primary mt-1" />
@@ -58,7 +58,7 @@ export const Footer = () => {
         {/* Bottom Bar */}
         <div className="pt-8 border-t border-border text-center">
           <p className="text-sm text-muted-foreground">
-            © {new Date().getFullYear()} Almeida Steel. Todos os direitos reservados.
+            © {new Date().getFullYear()} Almeida Engenharia. Todos os direitos reservados.
           </p>
         </div>
       </div>
