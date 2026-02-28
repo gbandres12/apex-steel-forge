@@ -53,8 +53,8 @@ export default {
           metallic: "hsl(var(--steel-metallic))",
         },
         glow: {
-          orange: "hsl(var(--glow-orange))",
-          soft: "hsl(var(--glow-orange-soft))",
+          red: "hsl(var(--glow-red))",
+          soft: "hsl(var(--glow-red-soft))",
         },
       },
       backgroundImage: {
