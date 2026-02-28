@@ -92,7 +92,7 @@ export const Calculator = ({ minArea = 100 }: CalculatorProps) => {
                 <Label htmlFor="area" className="text-foreground mb-2 block">
                   Área aproximada: <span className="text-primary font-semibold">{area[0]} m²</span>
                 </Label>
-                <Slider id="area" min={100} max={10000} step={50} value={area} onValueChange={setArea} className="mt-2" />
+                <Slider id="area" min={minArea} max={10000} step={50} value={area} onValueChange={setArea} className="mt-2" />
               </div>
 
               <div>

@@ -25,10 +25,10 @@ export const Footer = () => {
           <div>
             <h4 className="font-semibold mb-4 text-foreground text-sm">Institucional</h4>
             <ul className="space-y-2 text-sm text-muted-foreground">
-              <li>Sobre a Empresa</li>
-              <li>Projetos Realizados</li>
-              <li>Certificações</li>
-              <li>Política de Qualidade</li>
+              <li><a href="/institucional" className="hover:text-foreground transition-colors">Sobre a Empresa</a></li>
+              <li><a href="/institucional#projetos" className="hover:text-foreground transition-colors">Projetos Realizados</a></li>
+              <li><a href="/institucional" className="hover:text-foreground transition-colors">Certificações</a></li>
+              <li><a href="/institucional" className="hover:text-foreground transition-colors">Ver todos os serviços →</a></li>
             </ul>
           </div>
 
