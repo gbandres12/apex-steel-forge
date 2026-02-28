@@ -23,7 +23,6 @@ export const Calculator = () => {
   const [phone, setPhone] = useState("");
   const [showResults, setShowResults] = useState(false);
 
-  // Placeholder calculation - will be replaced with actual parameters later
   const calculateSavings = () => {
     if (!projectType || !deadline) {
       toast.error("Por favor, preencha todos os campos");
@@ -38,45 +37,39 @@ export const Calculator = () => {
       toast.error("Por favor, preencha email e telefone para receber o relatório");
       return;
     }
-    toast.success("Relatório enviado! Nossa equipe entrará em contato em breve.");
+    toast.success("Solicitação enviada! Nossa equipe entrará em contato em breve.");
   };
 
-  const estimatedSavings = area[0] * 150; // Placeholder formula
-  const timeReduction = Math.floor(area[0] / 50); // Placeholder formula
+  const estimatedSavings = area[0] * 150;
+  const timeReduction = Math.floor(area[0] / 50);
 
   return (
-    <section id="calculator" className="py-20 bg-gradient-steel">
+    <section id="contato" className="py-20 bg-gradient-steel">
       <div className="container mx-auto px-4">
         <div className="text-center mb-12">
-          <h2 className="text-4xl md:text-5xl font-bold mb-4">
-            Descubra em 30 Segundos: <span className="text-primary">Quanto Você Vai Economizar?</span>
+          <p className="text-primary text-sm font-semibold uppercase tracking-widest mb-3">Simulação Rápida</p>
+          <h2 className="text-3xl md:text-4xl font-bold mb-4">
+            Estime o Custo do Seu Projeto
           </h2>
-          <p className="text-xl text-steel-light">
-            Compare o custo REAL entre aço e concreto. Os números vão te surpreender.
+          <p className="text-muted-foreground max-w-2xl mx-auto">
+            Preencha os dados abaixo para receber uma estimativa inicial. Sem compromisso.
           </p>
         </div>
 
         <Card className="max-w-4xl mx-auto p-8 bg-card border-border">
-          <div className="mb-6 text-center">
-            <Button 
-              onClick={() => navigate("/simulador")}
-              size="lg"
-              className="shadow-glow"
-            >
-              🏗️ Montar Meu Galpão em 3D (Grátis)
+          <div className="mb-8 text-center">
+            <Button onClick={() => navigate("/simulador")} size="lg" variant="outline" className="border-primary text-primary hover:bg-primary hover:text-primary-foreground">
+              Abrir Simulador 3D
             </Button>
-            <p className="text-sm text-muted-foreground mt-2">
-              Configure cada detalhe e veja seu projeto antes de investir
+            <p className="text-xs text-muted-foreground mt-2">
+              Visualize e configure seu projeto em 3D antes de solicitar orçamento
             </p>
           </div>
 
           <div className="grid md:grid-cols-2 gap-8">
-            {/* Input Section */}
             <div className="space-y-6">
               <div>
-                <Label htmlFor="project-type" className="text-foreground mb-2 block">
-                  Tipo de Projeto
-                </Label>
+                <Label htmlFor="project-type" className="text-foreground mb-2 block">Tipo de Projeto</Label>
                 <Select value={projectType} onValueChange={setProjectType}>
                   <SelectTrigger id="project-type" className="bg-background border-border">
                     <SelectValue placeholder="Selecione o tipo" />
@@ -93,23 +86,13 @@ export const Calculator = () => {
 
               <div>
                 <Label htmlFor="area" className="text-foreground mb-2 block">
-                  Área em m²: <span className="text-primary font-bold">{area[0]} m²</span>
+                  Área aproximada: <span className="text-primary font-semibold">{area[0]} m²</span>
                 </Label>
-                <Slider
-                  id="area"
-                  min={100}
-                  max={10000}
-                  step={50}
-                  value={area}
-                  onValueChange={setArea}
-                  className="mt-2"
-                />
+                <Slider id="area" min={100} max={10000} step={50} value={area} onValueChange={setArea} className="mt-2" />
               </div>
 
               <div>
-                <Label htmlFor="deadline" className="text-foreground mb-2 block">
-                  Prazo Desejado
-                </Label>
+                <Label htmlFor="deadline" className="text-foreground mb-2 block">Prazo Desejado</Label>
                 <Select value={deadline} onValueChange={setDeadline}>
                   <SelectTrigger id="deadline" className="bg-background border-border">
                     <SelectValue placeholder="Selecione o prazo" />
@@ -123,65 +106,32 @@ export const Calculator = () => {
                 </Select>
               </div>
 
-              <Button 
-                onClick={calculateSavings}
-                className="w-full shadow-glow"
-              >
-                Calcular Economia
-              </Button>
+              <Button onClick={calculateSavings} className="w-full">Calcular Estimativa</Button>
             </div>
 
-            {/* Results Section */}
             <div className="flex flex-col justify-center">
               {showResults ? (
                 <div className="space-y-6">
-                  {/* Savings Display */}
-                  <div className="bg-gradient-glow p-6 rounded-lg text-center">
-                    <div className="text-sm text-primary-foreground mb-2">Economia Estimada</div>
-                    <div className="text-4xl font-bold text-primary-foreground">
-                      R$ {estimatedSavings.toLocaleString('pt-BR')}
-                    </div>
+                  <div className="bg-primary/10 border border-primary/20 p-6 rounded-lg text-center">
+                    <div className="text-xs text-muted-foreground mb-1 uppercase tracking-wide">Economia Estimada</div>
+                    <div className="text-3xl font-bold text-primary">R$ {estimatedSavings.toLocaleString("pt-BR")}</div>
                   </div>
 
-                  {/* Time Reduction */}
                   <div className="bg-secondary p-6 rounded-lg text-center">
-                    <div className="text-sm text-secondary-foreground mb-2">Redução de Prazo</div>
-                    <div className="text-4xl font-bold text-foreground">
-                      {timeReduction} dias
-                    </div>
+                    <div className="text-xs text-muted-foreground mb-1 uppercase tracking-wide">Redução de Prazo</div>
+                    <div className="text-3xl font-bold text-foreground">{timeReduction} dias</div>
                   </div>
 
-                  {/* Lead Capture Form */}
                   <form onSubmit={handleSubmit} className="space-y-4 pt-4 border-t border-border">
-                    <p className="text-sm text-center text-muted-foreground">
-                      Receba o estudo de viabilidade completo
-                    </p>
-                    <div>
-                      <Input
-                        type="email"
-                        placeholder="Seu e-mail"
-                        value={email}
-                        onChange={(e) => setEmail(e.target.value)}
-                        className="bg-background border-border"
-                      />
-                    </div>
-                    <div>
-                      <Input
-                        type="tel"
-                        placeholder="Seu telefone"
-                        value={phone}
-                        onChange={(e) => setPhone(e.target.value)}
-                        className="bg-background border-border"
-                      />
-                    </div>
-                    <Button type="submit" className="w-full">
-                      Receber Estudo Completo
-                    </Button>
+                    <p className="text-xs text-center text-muted-foreground">Receba o estudo de viabilidade completo</p>
+                    <Input type="email" placeholder="Seu e-mail" value={email} onChange={(e) => setEmail(e.target.value)} className="bg-background border-border" />
+                    <Input type="tel" placeholder="Seu telefone" value={phone} onChange={(e) => setPhone(e.target.value)} className="bg-background border-border" />
+                    <Button type="submit" className="w-full">Solicitar Orçamento</Button>
                   </form>
                 </div>
               ) : (
                 <div className="text-center text-muted-foreground">
-                  <p>Preencha os campos ao lado para calcular sua economia</p>
+                  <p className="text-sm">Preencha os campos ao lado para ver a estimativa</p>
                 </div>
               )}
             </div>
