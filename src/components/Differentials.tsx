@@ -5,34 +5,38 @@ import robustnessIcon from "@/assets/robustness-icon.jpg";
 const differentials = [
   {
     icon: speedIcon,
-    title: "⚡ 40% Mais Rápido",
-    headline: "Enquanto Obra Convencional Enfrenta Chuva, Você Já Está Operando",
-    description: "Estruturas pré-fabricadas em fábrica. Montagem em campo em semanas, não meses. Menos mão de obra, menos imprevistos.",
+    title: "Agilidade",
+    headline: "Entrega até 40% mais rápida",
+    description:
+      "Estruturas pré-fabricadas em fábrica e montadas no local em semanas. Processo industrializado que reduz prazos, custos com mão de obra e imprevistos climáticos.",
   },
   {
     icon: precisionIcon,
-    title: "💰 Zero Surpresas no Orçamento",
-    headline: "Preço Fechado = Sua Margem Protegida",
-    description: "Chega de adicionais por 'imprevistos'. O aço é preciso: o que está no contrato é o que você paga. Ponto final.",
+    title: "Previsibilidade",
+    headline: "Orçamento fechado em contrato",
+    description:
+      "Projeto detalhado antes da fabricação garante precisão nos custos. O valor acordado é o valor final — sem aditivos ou surpresas.",
   },
   {
     icon: robustnessIcon,
-    title: "🛡️ Estrutura que Enfrenta o Clima da Amazônia",
-    headline: "Certificada para os Ambientes Mais Extremos",
-    description: "Proteção anticorrosiva de alto desempenho. Projetada para umidade, calor e chuvas intensas do Norte do Brasil.",
+    title: "Durabilidade",
+    headline: "Preparada para condições extremas",
+    description:
+      "Tratamento anticorrosivo de alto desempenho, dimensionado para o clima amazônico. Estruturas projetadas para durabilidade superior a 30 anos.",
   },
 ];
 
 export const Differentials = () => {
   return (
-    <section className="py-20 bg-gradient-steel">
+    <section id="diferenciais" className="py-20 bg-gradient-steel">
       <div className="container mx-auto px-4">
         <div className="text-center mb-16">
-          <h2 className="text-4xl md:text-5xl font-bold mb-4">
-            Por Que Nossos Clientes Nunca Voltam para o Concreto?
+          <p className="text-primary text-sm font-semibold uppercase tracking-widest mb-3">Por Que Nos Escolher</p>
+          <h2 className="text-3xl md:text-4xl font-bold mb-4">
+            Nossos Diferenciais
           </h2>
-          <p className="text-xl text-steel-light max-w-2xl mx-auto">
-            Três Vantagens Inegociáveis do Aço
+          <p className="text-muted-foreground max-w-2xl mx-auto">
+            Compromisso com qualidade, prazo e transparência em cada etapa do projeto.
           </p>
         </div>
 
@@ -40,31 +44,25 @@ export const Differentials = () => {
           {differentials.map((item, index) => (
             <div
               key={index}
-              className="group relative bg-card border border-border rounded-lg p-8 hover:border-primary transition-all duration-300 hover:shadow-card"
+              className="group relative bg-card border border-border rounded-lg p-8 hover:border-primary/40 transition-all duration-300"
             >
-              {/* 3D Icon */}
               <div className="mb-6 flex justify-center">
-                <div className="relative w-32 h-32 transform group-hover:scale-110 transition-transform duration-300">
-                  <img 
-                    src={item.icon} 
+                <div className="relative w-28 h-28 rounded-lg overflow-hidden">
+                  <img
+                    src={item.icon}
                     alt={item.title}
-                    className="w-full h-full object-cover rounded-lg shadow-strong"
+                    className="w-full h-full object-cover"
                   />
-                  <div className="absolute inset-0 bg-gradient-to-t from-primary/20 to-transparent rounded-lg opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
                 </div>
               </div>
 
-              {/* Title Badge */}
-              <div className="inline-block px-3 py-1 bg-primary/10 border border-primary/30 rounded-full mb-4">
-                <span className="text-primary text-sm font-semibold">{item.title}</span>
+              <div className="text-center space-y-3">
+                <span className="text-xs font-semibold text-primary uppercase tracking-widest">
+                  {item.title}
+                </span>
+                <h3 className="text-xl font-bold">{item.headline}</h3>
+                <p className="text-muted-foreground text-sm leading-relaxed">{item.description}</p>
               </div>
-
-              {/* Content */}
-              <h3 className="text-2xl font-bold mb-3">{item.headline}</h3>
-              <p className="text-muted-foreground leading-relaxed">{item.description}</p>
-
-              {/* Decorative Line */}
-              <div className="absolute bottom-0 left-0 w-full h-1 bg-gradient-to-r from-transparent via-primary to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
             </div>
           ))}
         </div>
