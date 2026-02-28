@@ -8,7 +8,7 @@ import { Testimonials } from "@/components/Testimonials";
 import { Calculator } from "@/components/Calculator";
 import { Footer } from "@/components/Footer";
 
-const Index = () => {
+const Institucional = () => {
   return (
     <div className="min-h-screen bg-background">
       <Navbar />
@@ -24,4 +24,4 @@ const Index = () => {
   );
 };
 
-export default Index;
+export default Institucional;

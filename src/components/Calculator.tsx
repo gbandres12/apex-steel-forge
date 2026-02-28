@@ -14,10 +14,14 @@ import { Slider } from "@/components/ui/slider";
 import { useNavigate } from "react-router-dom";
 import { toast } from "sonner";
 
-export const Calculator = () => {
+interface CalculatorProps {
+  minArea?: number;
+}
+
+export const Calculator = ({ minArea = 100 }: CalculatorProps) => {
   const navigate = useNavigate();
   const [projectType, setProjectType] = useState("");
-  const [area, setArea] = useState([500]);
+  const [area, setArea] = useState([Math.max(500, minArea)]);
   const [deadline, setDeadline] = useState("");
   const [email, setEmail] = useState("");
   const [phone, setPhone] = useState("");
@@ -88,7 +92,7 @@ export const Calculator = () => {
                 <Label htmlFor="area" className="text-foreground mb-2 block">
                   Área aproximada: <span className="text-primary font-semibold">{area[0]} m²</span>
                 </Label>
-                <Slider id="area" min={100} max={10000} step={50} value={area} onValueChange={setArea} className="mt-2" />
+                <Slider id="area" min={minArea} max={10000} step={50} value={area} onValueChange={setArea} className="mt-2" />
               </div>
 
               <div>
