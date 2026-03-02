@@ -1,24 +1,20 @@
-import speedIcon from "@/assets/speed-icon.jpg";
-import precisionIcon from "@/assets/precision-icon.jpg";
-import robustnessIcon from "@/assets/robustness-icon.jpg";
-
 const differentials = [
   {
-    icon: speedIcon,
+    icon: "/icones-padrao/agilidade.png",
     title: "Agilidade",
     headline: "Entrega até 40% mais rápida",
     description:
       "Estruturas pré-fabricadas em fábrica e montadas no local em semanas. Processo industrializado que reduz prazos, custos com mão de obra e imprevistos climáticos.",
   },
   {
-    icon: precisionIcon,
+    icon: "/icones-padrao/previsibilidade.png",
     title: "Previsibilidade",
     headline: "Orçamento fechado em contrato",
     description:
       "Projeto detalhado antes da fabricação garante precisão nos custos. O valor acordado é o valor final — sem aditivos ou surpresas.",
   },
   {
-    icon: robustnessIcon,
+    icon: "/icones-padrao/durabilidade.png",
     title: "Durabilidade",
     headline: "Preparada para condições extremas",
     description:
