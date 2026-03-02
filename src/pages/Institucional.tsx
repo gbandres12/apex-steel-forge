@@ -4,6 +4,7 @@ import { About } from "@/components/About";
 import { Differentials } from "@/components/Differentials";
 import { Solutions } from "@/components/Solutions";
 import { ProjectGallery } from "@/components/ProjectGallery";
+import { ClientLogos } from "@/components/ClientLogos";
 import { Testimonials } from "@/components/Testimonials";
 import { Calculator } from "@/components/Calculator";
 import { Footer } from "@/components/Footer";
@@ -17,6 +18,7 @@ const Institucional = () => {
       <Differentials />
       <Solutions />
       <ProjectGallery />
+      <ClientLogos />
       <Testimonials />
       <Calculator />
       <Footer />

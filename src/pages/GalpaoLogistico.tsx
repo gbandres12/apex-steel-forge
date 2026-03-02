@@ -2,6 +2,7 @@ import { useSearchParams, useNavigate, Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Differentials } from "@/components/Differentials";
 import { ProjectGallery } from "@/components/ProjectGallery";
+import { ClientLogos } from "@/components/ClientLogos";
 import { Testimonials } from "@/components/Testimonials";
 import { Calculator } from "@/components/Calculator";
 import { Footer } from "@/components/Footer";
@@ -150,6 +151,7 @@ const GalpaoLogistico = () => {
       <HeroLanding porte={porte} />
       <Differentials />
       <ProjectGallery />
+      <ClientLogos />
       <Testimonials />
       <Calculator minArea={minArea} />
       <Footer />
