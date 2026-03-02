@@ -4,6 +4,7 @@ import { OrbitControls } from "@react-three/drei";
 import { useShed } from "@/contexts/ShedContext";
 import * as THREE from "three";
 import { RectangularTruss } from "./RectangularTruss";
+import { IBeamTruss } from "./IBeamTruss";
 import { Environment } from "./Environment";
 
 const ShedStructure = () => {
@@ -25,7 +26,7 @@ const ShedStructure = () => {
   // Número de treliças (uma a cada 6m)
   const trussCount = Math.floor(config.length / 6);
   const trussPositions: [number, number, number][] = [];
-  
+
   for (let i = 0; i < trussCount; i++) {
     const x = (i * 6) - config.length / 2 + 3; // Centralizar entre pilares
     trussPositions.push([x, config.height + 0.75, 0]);
@@ -51,26 +52,30 @@ const ShedStructure = () => {
         <meshStandardMaterial color={structureColor} />
       </mesh>
 
-      {/* Vigas transversais nas posições dos pilares */}
+      {/* Vigas / Treliças transversais */}
       {Array.from({ length: pillarCount }).map((_, i) => {
         const x = (i * pillarSpacing) - config.length / 2;
-        return (
-          <mesh key={`beam-${i}`} position={[x, config.height, 0]}>
-            <boxGeometry args={[0.3, 0.3, config.width]} />
-            <meshStandardMaterial color={structureColor} />
-          </mesh>
-        );
+        if (config.structureType === "viga-i") {
+          // Viga I posicionada no topo dos pilares
+          return (
+            <IBeamTruss
+              key={`ibeam-${i}`}
+              width={config.width}
+              position={[x, config.height + 0.4, 0]}
+            />
+          );
+        } else {
+          // Treliça retangular
+          return (
+            <RectangularTruss
+              key={`truss-${i}`}
+              width={config.width}
+              height={1.5}
+              position={[x, config.height + 0.75, 0]}
+            />
+          );
+        }
       })}
-
-      {/* Treliças retangulares */}
-      {trussPositions.map((pos, idx) => (
-        <RectangularTruss 
-          key={`truss-${idx}`}
-          width={config.width}
-          height={1.5}
-          position={pos}
-        />
-      ))}
 
       {/* Cobertura - levemente acima das treliças */}
       <mesh position={[0, config.height + 1.6, 0]} rotation={[0, 0, 0]} castShadow receiveShadow>
@@ -143,9 +148,9 @@ export const ShedVisualizer = () => {
       >
         {/* Iluminação melhorada com sombras */}
         <ambientLight intensity={0.5} />
-        <directionalLight 
-          position={[50, 50, 30]} 
-          intensity={1.2} 
+        <directionalLight
+          position={[50, 50, 30]}
+          intensity={1.2}
           castShadow
           shadow-mapSize-width={2048}
           shadow-mapSize-height={2048}

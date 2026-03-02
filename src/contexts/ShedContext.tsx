@@ -1,11 +1,12 @@
 import { createContext, useContext, useState, ReactNode } from "react";
 
 export interface ShedConfig {
-  length: number; // Comprimento (m) - múltiplos de 6
-  width: number; // Largura (m)
-  height: number; // Pé-direito (m) - 6, 8, 10, 12
+  length: number;
+  width: number;
+  height: number;
   showWalls: boolean;
   roofType: "metalica" | "termoacustica";
+  structureType: "viga-i" | "trelica";
   hasMezzanine: boolean;
   mezzanineWidth: number;
   mezzanineLength: number;
@@ -22,11 +23,12 @@ interface ShedContextType {
 }
 
 const defaultConfig: ShedConfig = {
-  length: 24, // Múltiplo de 6
+  length: 24,
   width: 10,
   height: 6,
   showWalls: true,
   roofType: "metalica",
+  structureType: "viga-i",
   hasMezzanine: false,
   mezzanineWidth: 5,
   mezzanineLength: 10,

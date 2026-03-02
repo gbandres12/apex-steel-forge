@@ -25,8 +25,8 @@ export const Navbar = () => {
   return (
     <nav className="fixed top-0 left-0 right-0 z-50 bg-background/90 backdrop-blur-md border-b border-border">
       <div className="container mx-auto px-4 flex items-center justify-between h-16">
-        <button onClick={() => scrollTo("hero")} className="text-xl font-bold text-primary tracking-tight">
-          Almeida Engenharia
+        <button onClick={() => scrollTo("hero")} className="flex items-center">
+          <img src="/ALMEIDA Engenharia 05.png" alt="Almeida Engenharia" className="h-10 w-auto" />
         </button>
 
         {/* Desktop */}

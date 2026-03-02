@@ -7,9 +7,9 @@ import obraTanques from "@/assets/obra-tanques-industriais.jpg";
 const projects = [
   {
     id: 1,
-    name: "Galpão Logístico — Montagem em Grande Porte",
+    name: "Galpão Noroeste",
     location: "Santarém, PA",
-    area: "3.200 m²",
+    area: "3.600 m²",
     image: obraGalpaoGrande,
   },
   {

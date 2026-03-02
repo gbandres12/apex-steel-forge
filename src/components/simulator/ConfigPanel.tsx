@@ -20,7 +20,7 @@ export const ConfigPanel = () => {
   return (
     <div className="h-full overflow-y-auto p-6 bg-card">
       <h2 className="text-2xl font-bold mb-6 text-foreground">Configure seu Galpão</h2>
-      
+
       <Accordion type="multiple" defaultValue={["dimensions", "visualization"]} className="space-y-2">
         {/* Dimensões */}
         <AccordionItem value="dimensions" className="border border-border rounded-lg px-4">
@@ -108,6 +108,56 @@ export const ConfigPanel = () => {
             </div>
           </AccordionTrigger>
           <AccordionContent className="space-y-6 pt-4">
+            {/* Tipo de Estrutura */}
+            <div>
+              <Label className="text-foreground mb-3 block">Tipo de Estrutura</Label>
+              <div className="grid grid-cols-2 gap-3">
+                {/* Viga I */}
+                <button
+                  type="button"
+                  onClick={() => updateConfig({ structureType: "viga-i" })}
+                  className={`p-3 rounded-lg border-2 text-left transition-all ${config.structureType === "viga-i"
+                      ? "border-primary bg-primary/10"
+                      : "border-border hover:border-primary/50"
+                    }`}
+                >
+                  {/* Ícone Viga I */}
+                  <svg viewBox="0 0 60 30" className="w-full mb-2" fill="currentColor">
+                    <rect x="5" y="2" width="50" height="5" rx="1" className="text-primary" fill="currentColor" />
+                    <rect x="26" y="7" width="8" height="16" rx="1" className="text-primary" fill="currentColor" />
+                    <rect x="5" y="23" width="50" height="5" rx="1" className="text-primary" fill="currentColor" />
+                  </svg>
+                  <p className="text-xs font-semibold text-foreground">Viga I (Alma Cheia)</p>
+                  <p className="text-xs text-muted-foreground mt-1">Robusta, para vãos menores com alta resistência</p>
+                </button>
+
+                {/* Treliça */}
+                <button
+                  type="button"
+                  onClick={() => updateConfig({ structureType: "trelica" })}
+                  className={`p-3 rounded-lg border-2 text-left transition-all ${config.structureType === "trelica"
+                      ? "border-primary bg-primary/10"
+                      : "border-border hover:border-primary/50"
+                    }`}
+                >
+                  {/* Ícone Treliça */}
+                  <svg viewBox="0 0 60 30" className="w-full mb-2" fill="none" stroke="currentColor" strokeWidth="2.5">
+                    <line x1="5" y1="5" x2="55" y2="5" className="stroke-primary" stroke="currentColor" />
+                    <line x1="5" y1="25" x2="55" y2="25" className="stroke-primary" stroke="currentColor" />
+                    <line x1="5" y1="5" x2="5" y2="25" className="stroke-primary" stroke="currentColor" />
+                    <line x1="20" y1="5" x2="20" y2="25" className="stroke-primary" stroke="currentColor" />
+                    <line x1="35" y1="5" x2="35" y2="25" className="stroke-primary" stroke="currentColor" />
+                    <line x1="50" y1="5" x2="50" y2="25" className="stroke-primary" stroke="currentColor" />
+                    <line x1="5" y1="25" x2="20" y2="5" className="stroke-primary" stroke="currentColor" />
+                    <line x1="20" y1="25" x2="35" y2="5" className="stroke-primary" stroke="currentColor" />
+                    <line x1="35" y1="25" x2="50" y2="5" className="stroke-primary" stroke="currentColor" />
+                  </svg>
+                  <p className="text-xs font-semibold text-foreground">Treliça</p>
+                  <p className="text-xs text-muted-foreground mt-1">Leve, econômica para grandes vãos sem pilares</p>
+                </button>
+              </div>
+            </div>
+
             {/* Tipo de Cobertura */}
             <div>
               <Label className="text-foreground mb-3 block">Tipo de Cobertura (sem pintura)</Label>
