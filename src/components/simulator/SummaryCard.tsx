@@ -2,139 +2,156 @@ import { useShed } from "@/contexts/ShedContext";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
 import { Button } from "@/components/ui/button";
-import { Calculator, Download, Send } from "lucide-react";
+import { Calculator, Download, Send, MessageCircle, FileText } from "lucide-react";
 import { toast } from "sonner";
 
 // ─── Tabela de preços ─────────────────────────────────────────────────────────
 const PRICING = {
-  estrutura: 180,            // R$/m² de planta
-  pilar6m: 50,               // R$/m² quando pé-direito 6m
-  pilar7m: 65,               // R$/m² quando pé-direito 7m
-  telhaSimples: 45,          // R$/m²
-  telhaTermoacustica: 135,   // R$/m²
-  fechamentoEstrutura: 85,   // R$/m² de área de fechamento
-  montagemEstrutura: 50,     // R$/m² de planta (fabricado+montado)
-  montagemFechamento: 25,    // R$/m² de fechamento (fabricado+montado)
-  mobilizacaoKmCarga: 18,    // R$/km por carga (cada 15t = 1 carga)
-  pesoEstruturaM2: 12,       // kg por m² de planta
-  pesoFechamentoM2: 7,       // kg por m² de fechamento
-  maoDeObraPor600m2: 20000,  // R$ 20.000 a cada 600m² de planta
-  raioIsencao: 60,           // km de Santarém sem cobrança de mobilização
+  estrutura: 180,           // R$/m² de planta
+  pilar6m: 50,              // R$/m² adicional pé-direito 6 m
+  pilar7m: 65,              // R$/m² adicional pé-direito 7 m
+  telhaSimples: 45,         // R$/m²
+  telhaTermoacustica: 135,  // R$/m²
+  fechamentoEstrutura: 85,  // R$/m² de área de fechamento
+  montagemEstrutura: 50,    // R$/m² de planta
+  montagemFechamento: 25,   // R$/m² de fechamento
+  mobilizacaoKmCarga: 18,   // R$/km por carga
+  pesoEstruturaM2: 12,      // kg/m² de planta
+  pesoFechamentoM2: 7,      // kg/m² de fechamento
+  maoDeObraPor600m2: 20_000,// R$ a cada 600 m²
+  raioIsencao: 60,          // km de Santarém sem mobilização
+  jurosMes: 0.025,          // 2,5 % a.m. (financiado)
 } as const;
 
 const fmt = (v: number) =>
   new Intl.NumberFormat("pt-BR", { style: "currency", currency: "BRL" }).format(v);
 
-// ─── Linha de item ─────────────────────────────────────────────────────────────
+const fmtN = (v: number, decimals = 1) =>
+  v.toLocaleString("pt-BR", { minimumFractionDigits: decimals, maximumFractionDigits: decimals });
+
+// ─── Item de linha simples ────────────────────────────────────────────────────
 function LineItem({
-  label,
-  value,
-  sub,
-  highlight,
+  label, value, sub, highlight,
 }: {
-  label: string;
-  value: string;
-  sub?: string;
-  highlight?: boolean;
+  label: string; value: string; sub?: string; highlight?: boolean;
 }) {
   return (
-    <div className={`flex justify-between items-start text-sm ${highlight ? "font-semibold" : ""}`}>
-      <div>
+    <div className={`flex justify-between items-start gap-2 text-sm ${highlight ? "font-semibold" : ""}`}>
+      <div className="flex-1 min-w-0">
         <span className={highlight ? "text-foreground" : "text-muted-foreground"}>{label}</span>
-        {sub && <p className="text-xs text-muted-foreground/70 mt-0">{sub}</p>}
+        {sub && <p className="text-xs text-muted-foreground/60 leading-tight">{sub}</p>}
       </div>
-      <span className={highlight ? "text-foreground" : "text-foreground/80"}>{value}</span>
+      <span className={`shrink-0 ${highlight ? "text-foreground" : "text-foreground/80"}`}>{value}</span>
     </div>
   );
 }
 
+// ─── Componente principal ─────────────────────────────────────────────────────
 export const SummaryCard = () => {
   const { config } = useShed();
 
   const isComercial = config.structureCategory === "comercial";
   const isMontado = config.serviceType === "fabricado-montado";
-  const temFechamento = config.closureType === "com-fechamento";
+  const temFechamento = config.closureOption !== "sem-fechamento";
+  const isParcial = config.closureOption === "parcial";
 
-  // ── Área de planta ───────────────────────────────────────────────────────────
+  // ── Área ──────────────────────────────────────────────────────────────────
   const areaPlanta = config.vaoLivre * config.profundidade;
 
-  // ── Pé-direito efetivo ───────────────────────────────────────────────────────
-  // Só existe quando com-pilar; caso sem-pilar não há pé-direito definido para
-  // fechamento, então adotamos 6m como padrão visual.
-  const pedireitoValor = config.pillarType === "com-pilar" ? config.peireito : 6;
+  // ── Pé-direito efetivo ────────────────────────────────────────────────────
+  const pedireito = config.pillarType === "com-pilar" ? config.peireito : 6;
 
-  // ── Valor da estrutura ───────────────────────────────────────────────────────
-  const valorEstrutura =
-    areaPlanta * PRICING.estrutura +
-    (config.pillarType === "com-pilar"
-      ? areaPlanta * (pedireitoValor === 6 ? PRICING.pilar6m : PRICING.pilar7m)
-      : 0);
+  // ── Estrutura ─────────────────────────────────────────────────────────────
+  const pilarAdd =
+    config.pillarType === "com-pilar"
+      ? areaPlanta * (pedireito === 6 ? PRICING.pilar6m : PRICING.pilar7m)
+      : 0;
+  const valorEstrutura = areaPlanta * PRICING.estrutura + pilarAdd;
 
-  // ── Telhado (cobertura) ──────────────────────────────────────────────────────
+  // ── Cobertura ─────────────────────────────────────────────────────────────
   const precoTelha =
     config.roofTileType === "termoacustica"
       ? PRICING.telhaTermoacustica
       : PRICING.telhaSimples;
-  const valorTelhado = areaPlanta * precoTelha;
+  const valorCobertura = areaPlanta * precoTelha;
 
-  // ── Fechamento ───────────────────────────────────────────────────────────────
+  // ── Fechamento ────────────────────────────────────────────────────────────
   const perimetro = 2 * config.vaoLivre + 2 * config.profundidade;
-  const alturaFechamento =
-    config.closureCoverage === "parcial"
-      ? pedireitoValor * 0.8
-      : pedireitoValor;
-  const areaPortao = config.gateWidth * config.gateHeight;
+  const alturaFechamento = isParcial ? pedireito * 0.8 : pedireito;
+  const areaPortao = temFechamento ? config.gateWidth * config.gateHeight : 0;
   const areaFechamento = temFechamento
     ? Math.max(0, alturaFechamento * perimetro - areaPortao)
     : 0;
 
-  const precoTelhaFechamento =
+  const precoTelhaFech =
     config.closureTileType === "termoacustica"
       ? PRICING.telhaTermoacustica
       : PRICING.telhaSimples;
 
-  const valorEstruturaFechamento = temFechamento
-    ? areaFechamento * PRICING.fechamentoEstrutura
-    : 0;
-  const valorTelhaFechamento = temFechamento
-    ? areaFechamento * precoTelhaFechamento
-    : 0;
-  const valorTotalFechamento = valorEstruturaFechamento + valorTelhaFechamento;
+  const valorEstFech = temFechamento ? areaFechamento * PRICING.fechamentoEstrutura : 0;
+  const valorTelhaFech = temFechamento ? areaFechamento * precoTelhaFech : 0;
+  const valorFechamento = valorEstFech + valorTelhaFech;
 
-  // ── Montagem ─────────────────────────────────────────────────────────────────
-  const valorMontagemEstrutura = isMontado ? areaPlanta * PRICING.montagemEstrutura : 0;
-  const valorMontagemFechamento = isMontado && temFechamento
-    ? areaFechamento * PRICING.montagemFechamento
-    : 0;
-  const valorMontagem = valorMontagemEstrutura + valorMontagemFechamento;
+  // ── Montagem ──────────────────────────────────────────────────────────────
+  const valorMontagemEst = isMontado ? areaPlanta * PRICING.montagemEstrutura : 0;
+  const valorMontagemFech = isMontado && temFechamento
+    ? areaFechamento * PRICING.montagemFechamento : 0;
+  const valorMontagem = valorMontagemEst + valorMontagemFech;
 
-  // ── Mão de obra de montagem ───────────────────────────────────────────────────
-  const valorMaoDeObra = isMontado
-    ? Math.ceil(areaPlanta / 600) * PRICING.maoDeObraPor600m2
-    : 0;
+  // ── Mão de obra ───────────────────────────────────────────────────────────
+  const blocos = Math.ceil(areaPlanta / 600);
+  const valorMaoDeObra = isMontado ? blocos * PRICING.maoDeObraPor600m2 : 0;
 
-  // ── Mobilização ───────────────────────────────────────────────────────────────
+  // ── Transporte / Mobilização ──────────────────────────────────────────────
   const pesoTotal =
     areaPlanta * PRICING.pesoEstruturaM2 +
     (temFechamento ? areaFechamento * PRICING.pesoFechamentoM2 : 0);
-  const numCargas = Math.ceil(pesoTotal / 15000);
-  const valorMobilizacao =
+  const numCargas = Math.ceil(pesoTotal / 15_000);
+  const valorTransporte =
     config.distanceKm > PRICING.raioIsencao
       ? numCargas * config.distanceKm * PRICING.mobilizacaoKmCarga
       : 0;
 
-  // ── Total ─────────────────────────────────────────────────────────────────────
+  // ── Total ─────────────────────────────────────────────────────────────────
   const valorTotal =
-    valorEstrutura +
-    valorTelhado +
-    valorTotalFechamento +
-    valorMontagem +
-    valorMaoDeObra +
-    valorMobilizacao;
+    valorEstrutura + valorCobertura + valorFechamento +
+    valorMontagem + valorMaoDeObra + valorTransporte;
 
-  // ── WhatsApp ──────────────────────────────────────────────────────────────────
-  const buildWhatsApp = () => {
-    const msg = `🏗️ *Orçamento Galpão - Apex Steel Forge*
+  const valorM2 = areaPlanta > 0 ? valorTotal / areaPlanta : 0;
+
+  // ── Simulação de pagamento ────────────────────────────────────────────────
+  // Financiado: 40% entrada + saldo em 24x com juros 2,5% a.m. (Price)
+  const entradaFinanciado = valorTotal * 0.40;
+  const saldoFinanciado = valorTotal - entradaFinanciado;
+  const i = PRICING.jurosMes;
+  const n = 24;
+  const parcelaFinanciado =
+    saldoFinanciado > 0
+      ? saldoFinanciado * (i * Math.pow(1 + i, n)) / (Math.pow(1 + i, n) - 1)
+      : 0;
+
+  // Medições: 5% + 25% em 30 dias + saldo em obra
+  const entrada5 = valorTotal * 0.05;
+  const parcela30 = valorTotal * 0.25;
+  const saldoMedicoes = valorTotal - entrada5 - parcela30;
+
+  // ── Mensagem WhatsApp ─────────────────────────────────────────────────────
+  const buildWhatsApp = (isEspecialista = false) => {
+    const fechDesc =
+      config.closureOption === "sem-fechamento"
+        ? "Sem fechamento"
+        : config.closureOption === "parcial"
+          ? `Parcial 80% — ${config.closureTileType === "termoacustica" ? "Termoacústica" : "Simples"}`
+          : `Total 100% — ${config.closureTileType === "termoacustica" ? "Termoacústica" : "Simples"}`;
+
+    const pgDesc =
+      config.paymentType === "financiado"
+        ? `Financiado — 40% entrada + 24×${fmt(parcelaFinanciado)} (2,5% a.m.)`
+        : `Medições — 5% entrada + 25% em 30 dias + saldo em obra`;
+
+    const msg = isEspecialista
+      ? `Olá! Gostaria de falar com um especialista sobre um galpão metálico.\n\n📐 ${config.vaoLivre}m × ${config.profundidade}m (${areaPlanta} m²)\n💰 Total estimado: ${fmt(valorTotal)}`
+      : `🏗️ *Orçamento Galpão — Apex Steel Forge*
 
 📐 *Dimensões:*
 • Vão Livre: ${config.vaoLivre}m
@@ -142,57 +159,83 @@ export const SummaryCard = () => {
 • Área de Planta: ${areaPlanta} m²
 
 🏗️ *Especificações:*
-• Estrutura: ${config.pillarType === "com-pilar" ? `Com Pilar (pé-direito ${pedireitoValor}m)` : "Sem Pilar"}
+• Estrutura: ${config.pillarType === "com-pilar" ? `Com Pilar (pé-direito ${pedireito}m)` : "Sem Pilar"}
 • Cobertura: ${config.roofTileType === "termoacustica" ? "Termoacústica EPS 30mm" : "Telha Simples 0,43mm"}
-• Fechamento: ${temFechamento ? `${config.closureCoverage === "parcial" ? "Parcial 80%" : "Total 100%"} — ${config.closureTileType === "termoacustica" ? "Termoacústica" : "Simples"}` : "Sem fechamento"}
-• Serviço: ${isMontado ? "Fabricado + Montado" : "Somente Fabricado"}
+• Fechamento: ${fechDesc}
+• Serviço: ${isMontado ? "Fabricação + Montagem" : "Apenas Fabricação"}
 
 💰 *Resumo Financeiro:*
 • Estrutura: ${fmt(valorEstrutura)}
-• Telhado: ${fmt(valorTelhado)}
-${temFechamento ? `• Fechamento: ${fmt(valorTotalFechamento)}\n` : ""}${isMontado ? `• Montagem: ${fmt(valorMontagem)}\n• Mão de Obra: ${fmt(valorMaoDeObra)}\n` : ""}${valorMobilizacao > 0 ? `• Mobilização (${numCargas} carga${numCargas > 1 ? "s" : ""}, ${config.distanceKm}km): ${fmt(valorMobilizacao)}\n` : ""}
-• *TOTAL ESTIMADO: ${fmt(valorTotal)}*
+• Cobertura: ${fmt(valorCobertura)}
+${temFechamento ? `• Fechamento: ${fmt(valorFechamento)}\n` : ""}${isMontado ? `• Montagem: ${fmt(valorMontagem)}\n• Mão de Obra: ${fmt(valorMaoDeObra)}\n` : ""}${valorTransporte > 0 ? `• Transporte (${numCargas} carga${numCargas > 1 ? "s" : ""}, ${config.distanceKm} km): ${fmt(valorTransporte)}\n` : ""}
+• *TOTAL: ${fmt(valorTotal)}*
+• *Valor por m²: ${fmt(valorM2)}*
+• Pagamento: ${pgDesc}
 
 Gostaria de uma proposta detalhada!`;
 
     return `https://wa.me/5593991910861?text=${encodeURIComponent(msg)}`;
   };
 
-  const handleWhatsApp = () => window.open(buildWhatsApp(), "_blank");
-
-  const handleDownloadPDF = () => {
-    toast.info("Gerando PDF...");
+  // ── Download texto ────────────────────────────────────────────────────────
+  const handleDownload = () => {
+    toast.info("Gerando arquivo...");
     setTimeout(() => {
-      const content = `
-ORÇAMENTO ESTIMADO - APEX STEEL FORGE
-======================================
+      const fechDesc =
+        config.closureOption === "sem-fechamento" ? "Sem fechamento"
+          : config.closureOption === "parcial" ? `Parcial 80% da altura`
+            : `Total 100% da altura`;
 
-DIMENSÕES
------------
-Vão Livre:        ${config.vaoLivre}m
-Profundidade:     ${config.profundidade}m
-Área de Planta:   ${areaPlanta} m²
+      const content = [
+        "ORÇAMENTO ESTIMADO — APEX STEEL FORGE",
+        "=".repeat(46),
+        "",
+        "DIMENSÕES",
+        "-".repeat(30),
+        `Vão Livre        : ${config.vaoLivre}m`,
+        `Profundidade     : ${config.profundidade}m`,
+        `Área de Planta   : ${areaPlanta} m²`,
+        "",
+        "ESPECIFICAÇÕES",
+        "-".repeat(30),
+        `Estrutura        : ${config.pillarType === "com-pilar" ? `Com Pilar (pé-direito ${pedireito}m)` : "Sem Pilar"}`,
+        `Cobertura        : ${config.roofTileType === "termoacustica" ? "Termoacústica EPS 30mm" : "Telha Simples 0,43mm"}`,
+        `Fechamento       : ${fechDesc}`,
+        ...(temFechamento ? [`Área Fechamento  : ${fmtN(areaFechamento)} m²`] : []),
+        `Serviço          : ${isMontado ? "Fabricação + Montagem" : "Apenas Fabricação"}`,
+        `Distância        : ${config.distanceKm} km de Santarém — PA`,
+        "",
+        "RESUMO FINANCEIRO",
+        "-".repeat(30),
+        `Estrutura        : ${fmt(valorEstrutura)}`,
+        `Cobertura        : ${fmt(valorCobertura)}`,
+        ...(temFechamento ? [`Fechamento       : ${fmt(valorFechamento)}`] : []),
+        ...(isMontado ? [`Montagem         : ${fmt(valorMontagem)}`, `Mão de Obra      : ${fmt(valorMaoDeObra)}`] : []),
+        ...(valorTransporte > 0 ? [`Transporte       : ${fmt(valorTransporte)}`] : []),
+        "",
+        `TOTAL ESTIMADO   : ${fmt(valorTotal)}`,
+        `VALOR POR M²     : ${fmt(valorM2)}`,
+        "",
+        "FORMA DE PAGAMENTO",
+        "-".repeat(30),
+        ...(config.paymentType === "financiado"
+          ? [
+            "Opção Financiada:",
+            `  Entrada (40%)  : ${fmt(entradaFinanciado)}`,
+            `  Parcelas       : 24× ${fmt(parcelaFinanciado)} (2,5% a.m.)`,
+          ]
+          : [
+            "Medições de Obra:",
+            `  Entrada (5%)   : ${fmt(entrada5)}`,
+            `  30 dias (25%)  : ${fmt(parcela30)}`,
+            `  Saldo em obra  : ${fmt(saldoMedicoes)}`,
+          ]),
+        "",
+        "=".repeat(46),
+        "* Valores estimados. Orçamento final conforme especificações técnicas.",
+        "* Mobilização cobrada apenas para obras fora de 60 km de Santarém — PA.",
+      ].join("\n");
 
-ESPECIFICAÇÕES
---------------
-Estrutura:        ${config.pillarType === "com-pilar" ? `Com Pilar (pé-direito ${pedireitoValor}m)` : "Sem Pilar"}
-Cobertura:        ${config.roofTileType === "termoacustica" ? "Termoacústica EPS 30mm" : "Telha Simples 0,43mm"}
-Fechamento:       ${temFechamento ? `${config.closureCoverage === "parcial" ? "Parcial 80%" : "Total 100%"}` : "Sem fechamento"}
-${temFechamento ? `Área Fechamento:  ${areaFechamento.toFixed(1)} m²\n` : ""}
-Serviço:          ${isMontado ? "Fabricado + Montado" : "Somente Fabricado"}
-Distância:        ${config.distanceKm} km de Santarém
-
-RESUMO FINANCEIRO
------------------
-Estrutura:        ${fmt(valorEstrutura)}
-Telhado:          ${fmt(valorTelhado)}
-${temFechamento ? `Fechamento:       ${fmt(valorTotalFechamento)}\n` : ""}${isMontado ? `Montagem:         ${fmt(valorMontagem)}\nMão de Obra:      ${fmt(valorMaoDeObra)}\n` : ""}${valorMobilizacao > 0 ? `Mobilização:      ${fmt(valorMobilizacao)}\n` : ""}
-TOTAL ESTIMADO: ${fmt(valorTotal)}
-
-======================================
-* Valores estimados. Orçamento final pode variar conforme especificações técnicas.
-* Distância considerada de Santarém - PA.
-`;
       const blob = new Blob([content], { type: "text/plain;charset=utf-8" });
       const url = URL.createObjectURL(blob);
       const a = document.createElement("a");
@@ -204,19 +247,14 @@ TOTAL ESTIMADO: ${fmt(valorTotal)}
     }, 800);
   };
 
-  const handleRequestQuote = () => {
-    toast.success("Solicitação enviada! Nossa equipe entrará em contato em breve.", {
-      duration: 5000,
-    });
-  };
+  const handleProposta = () =>
+    toast.success("Solicitação enviada! Nossa equipe entrará em contato em breve.", { duration: 5000 });
 
-  // ── Render Industrial ─────────────────────────────────────────────────────────
+  // ══ RENDER INDUSTRIAL ══════════════════════════════════════════════════════
   if (!isComercial) {
     const allFilled =
-      config.industrialName &&
-      config.industrialEmail &&
-      config.industrialPhone &&
-      config.industrialUseType;
+      config.industrialName && config.industrialEmail &&
+      config.industrialPhone && config.industrialUseType;
 
     const handleIndustrialSubmit = () => {
       if (!allFilled) {
@@ -224,8 +262,8 @@ TOTAL ESTIMADO: ${fmt(valorTotal)}
         return;
       }
       toast.success(
-        "Nosso setor comercial irá analisar sua necessidade e entrar em contato.",
-        { duration: 7000 }
+        "Seu projeto industrial exige análise técnica especializada. Nossa equipe comercial entrará em contato em breve.",
+        { duration: 8000 }
       );
     };
 
@@ -236,19 +274,27 @@ TOTAL ESTIMADO: ${fmt(valorTotal)}
             <Send className="w-5 h-5" />
             Estrutura Industrial
           </CardTitle>
-          <p className="text-sm text-white/80">Proposta personalizada</p>
+          <p className="text-sm text-white/80">Proposta técnica personalizada</p>
         </CardHeader>
         <CardContent className="pt-6 space-y-4">
           <p className="text-sm text-muted-foreground leading-relaxed">
-            Estruturas industriais possuem requisitos específicos que exigem análise técnica detalhada. Após o envio do formulário, nossa equipe entrará em contato.
+            Estruturas industriais possuem requisitos específicos que exigem análise técnica detalhada.
+            Após o envio, nossa equipe entrará em contato.
           </p>
 
           <div className="bg-muted/30 p-3 rounded-lg space-y-1 text-sm">
-            <p><span className="text-muted-foreground">Nome:</span> <span className="text-foreground font-medium">{config.industrialName || "—"}</span></p>
-            <p><span className="text-muted-foreground">CNPJ:</span> <span className="text-foreground font-medium">{config.industrialCnpj || "—"}</span></p>
-            <p><span className="text-muted-foreground">E-mail:</span> <span className="text-foreground font-medium">{config.industrialEmail || "—"}</span></p>
-            <p><span className="text-muted-foreground">Telefone:</span> <span className="text-foreground font-medium">{config.industrialPhone || "—"}</span></p>
-            <p><span className="text-muted-foreground">Tipo de uso:</span> <span className="text-foreground font-medium">{config.industrialUseType || "—"}</span></p>
+            {[
+              ["Nome", config.industrialName],
+              ["CNPJ", config.industrialCnpj],
+              ["E-mail", config.industrialEmail],
+              ["Telefone", config.industrialPhone],
+              ["Tipo de uso", config.industrialUseType],
+            ].map(([label, value]) => (
+              <p key={label}>
+                <span className="text-muted-foreground">{label}:</span>{" "}
+                <span className="text-foreground font-medium">{value || "—"}</span>
+              </p>
+            ))}
           </div>
 
           <Button
@@ -258,14 +304,24 @@ TOTAL ESTIMADO: ${fmt(valorTotal)}
             <Send className="w-4 h-4 mr-2" />
             Enviar para Análise Comercial
           </Button>
+
+          <Button
+            variant="outline"
+            className="w-full"
+            onClick={() => window.open(`https://wa.me/5593991910861?text=${encodeURIComponent("Olá! Preciso de um projeto industrial personalizado. Gostaria de falar com um especialista.")}`, "_blank")}
+          >
+            <MessageCircle className="w-4 h-4 mr-2" />
+            Falar com Especialista no WhatsApp
+          </Button>
         </CardContent>
       </Card>
     );
   }
 
-  // ── Render Comercial ──────────────────────────────────────────────────────────
+  // ══ RENDER COMERCIAL ═══════════════════════════════════════════════════════
   return (
     <Card className="border-border bg-card">
+      {/* Header */}
       <CardHeader className="bg-gradient-to-r from-primary to-primary/70 text-primary-foreground rounded-t-xl">
         <CardTitle className="flex items-center gap-2 text-primary-foreground">
           <Calculator className="w-5 h-5" />
@@ -275,7 +331,8 @@ TOTAL ESTIMADO: ${fmt(valorTotal)}
       </CardHeader>
 
       <CardContent className="pt-5 space-y-4">
-        {/* Dimensões */}
+
+        {/* ── Dimensões ── */}
         <div className="bg-muted/30 rounded-lg p-3 grid grid-cols-3 gap-2 text-center text-sm">
           <div>
             <p className="text-muted-foreground text-xs">Vão Livre</p>
@@ -286,50 +343,53 @@ TOTAL ESTIMADO: ${fmt(valorTotal)}
             <p className="font-bold text-foreground">{config.profundidade}m</p>
           </div>
           <div>
-            <p className="text-muted-foreground text-xs">Área</p>
+            <p className="text-muted-foreground text-xs">Área Total</p>
             <p className="font-bold text-primary">{areaPlanta} m²</p>
           </div>
         </div>
 
+        {/* ── Área de fechamento ── */}
         {temFechamento && (
           <div className="bg-muted/20 rounded-lg p-3 grid grid-cols-2 gap-2 text-center text-sm">
             <div>
               <p className="text-muted-foreground text-xs">Área Fechamento</p>
-              <p className="font-bold text-foreground">{areaFechamento.toFixed(1)} m²</p>
+              <p className="font-bold text-foreground">{fmtN(areaFechamento)} m²</p>
             </div>
             <div>
               <p className="text-muted-foreground text-xs">Pé-direito</p>
-              <p className="font-bold text-foreground">{pedireitoValor}m {config.closureCoverage === "parcial" ? "(×80%)" : ""}</p>
+              <p className="font-bold text-foreground">
+                {pedireito}m {isParcial ? "(×80%)" : ""}
+              </p>
             </div>
           </div>
         )}
 
         <Separator />
 
-        {/* Itens de custo */}
+        {/* ── Itens de custo ── */}
         <div className="space-y-2.5">
           <LineItem
             label="Estrutura Metálica"
-            sub={`R$ 180/m²${config.pillarType === "com-pilar" ? ` + R$ ${pedireitoValor === 6 ? "50" : "65"}/m² (pilar)` : ""}`}
+            sub={`R$ 180/m²${config.pillarType === "com-pilar" ? ` + R$ ${pedireito === 6 ? "50" : "65"}/m² (pilar ${pedireito}m)` : ""}`}
             value={fmt(valorEstrutura)}
           />
           <LineItem
-            label={`Telhado (${config.roofTileType === "termoacustica" ? "Termoacústica" : "Simples"})`}
+            label={`Cobertura (${config.roofTileType === "termoacustica" ? "Termoacústica" : "Simples"})`}
             sub={`R$ ${precoTelha}/m² × ${areaPlanta} m²`}
-            value={fmt(valorTelhado)}
+            value={fmt(valorCobertura)}
           />
 
           {temFechamento && (
             <>
               <LineItem
                 label="Estrutura de Fechamento"
-                sub={`R$ 85/m² × ${areaFechamento.toFixed(1)} m²`}
-                value={fmt(valorEstruturaFechamento)}
+                sub={`R$ 85/m² × ${fmtN(areaFechamento)} m²`}
+                value={fmt(valorEstFech)}
               />
               <LineItem
                 label={`Telha Fechamento (${config.closureTileType === "termoacustica" ? "Termoacústica" : "Simples"})`}
-                sub={`R$ ${precoTelhaFechamento}/m² × ${areaFechamento.toFixed(1)} m²`}
-                value={fmt(valorTelhaFechamento)}
+                sub={`R$ ${precoTelhaFech}/m² × ${fmtN(areaFechamento)} m²`}
+                value={fmt(valorTelhaFech)}
               />
             </>
           )}
@@ -337,39 +397,81 @@ TOTAL ESTIMADO: ${fmt(valorTotal)}
           {isMontado && (
             <>
               <LineItem
-                label="Montagem (estrutura + fechamento)"
-                sub={`R$ 50/m² planta${temFechamento ? " + R$ 25/m² fechamento" : ""}`}
+                label="Montagem"
+                sub={`Estrutura R$ 50/m²${temFechamento ? " · Fechamento R$ 25/m²" : ""}`}
                 value={fmt(valorMontagem)}
               />
               <LineItem
                 label="Mão de Obra de Montagem"
-                sub={`R$ 20.000 × ${Math.ceil(areaPlanta / 600)} bloco(s) de 600m²`}
+                sub={`R$ 20.000 × ${blocos} bloco${blocos > 1 ? "s" : ""} de 600 m²`}
                 value={fmt(valorMaoDeObra)}
               />
             </>
           )}
 
-          {valorMobilizacao > 0 && (
+          {valorTransporte > 0 && (
             <LineItem
-              label="Mobilização de Carga"
+              label="Transporte / Mobilização"
               sub={`${numCargas} carga${numCargas > 1 ? "s" : ""} × ${config.distanceKm} km × R$ 18/km`}
-              value={fmt(valorMobilizacao)}
+              value={fmt(valorTransporte)}
             />
           )}
         </div>
 
         <Separator className="bg-primary/20" />
 
-        {/* Total */}
-        <div className="flex justify-between items-center">
-          <span className="text-lg font-bold text-foreground">Total Estimado</span>
-          <span className="text-2xl font-bold text-primary">{fmt(valorTotal)}</span>
+        {/* ── Totais ── */}
+        <div className="space-y-2">
+          <div className="flex justify-between items-center">
+            <span className="text-lg font-bold text-foreground">Total do Investimento</span>
+            <span className="text-2xl font-bold text-primary">{fmt(valorTotal)}</span>
+          </div>
+          <div className="flex justify-between items-center bg-muted/30 rounded-lg px-3 py-2">
+            <span className="text-sm text-muted-foreground">📊 Valor por m²</span>
+            <span className="text-base font-bold text-foreground">{fmt(valorM2)}</span>
+          </div>
         </div>
 
-        {/* Botões */}
+        <Separator className="bg-border/50" />
+
+        {/* ── Forma de Pagamento ── */}
+        <div className="space-y-2">
+          <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">
+            💰 Simulação de Pagamento
+          </p>
+
+          {config.paymentType === "financiado" ? (
+            <div className="bg-blue-500/10 border border-blue-500/20 rounded-xl p-3 text-sm space-y-1.5">
+              <p className="font-bold text-foreground">💳 Opção Financiada</p>
+              <div className="grid grid-cols-2 gap-x-4 gap-y-1 text-xs">
+                <span className="text-muted-foreground">Entrada (40%)</span>
+                <span className="font-semibold text-foreground text-right">{fmt(entradaFinanciado)}</span>
+                <span className="text-muted-foreground">Parcelas (24×)</span>
+                <span className="font-semibold text-primary text-right">{fmt(parcelaFinanciado)}/mês</span>
+                <span className="text-muted-foreground">Juros</span>
+                <span className="font-semibold text-foreground text-right">2,5% a.m.</span>
+              </div>
+            </div>
+          ) : (
+            <div className="bg-green-500/10 border border-green-500/20 rounded-xl p-3 text-sm space-y-1.5">
+              <p className="font-bold text-foreground">🏗️ Medições de Obra</p>
+              <div className="grid grid-cols-2 gap-x-4 gap-y-1 text-xs">
+                <span className="text-muted-foreground">Entrada (5%)</span>
+                <span className="font-semibold text-foreground text-right">{fmt(entrada5)}</span>
+                <span className="text-muted-foreground">30 dias (25%)</span>
+                <span className="font-semibold text-foreground text-right">{fmt(parcela30)}</span>
+                <span className="text-muted-foreground">Saldo em obra</span>
+                <span className="font-semibold text-primary text-right">{fmt(saldoMedicoes)}</span>
+              </div>
+            </div>
+          )}
+        </div>
+
+        {/* ── Botões de ação ── */}
         <div className="space-y-2 pt-1">
+          {/* WhatsApp principal */}
           <Button
-            onClick={handleWhatsApp}
+            onClick={() => window.open(buildWhatsApp(), "_blank")}
             className="w-full bg-green-600 hover:bg-green-700 shadow-lg font-semibold"
           >
             <svg className="w-4 h-4 mr-2" fill="currentColor" viewBox="0 0 24 24">
@@ -378,14 +480,31 @@ TOTAL ESTIMADO: ${fmt(valorTotal)}
             Solicitar via WhatsApp
           </Button>
 
-          <div className="grid grid-cols-2 gap-2">
-            <Button onClick={handleDownloadPDF} variant="outline" className="w-full text-sm gap-1.5">
-              <Download className="w-4 h-4" />
-              Baixar Orçamento
+          {/* Grid 3 botões */}
+          <div className="grid grid-cols-3 gap-2">
+            <Button
+              onClick={handleDownload}
+              variant="outline"
+              className="w-full text-xs gap-1 py-2"
+            >
+              <Download className="w-3.5 h-3.5" />
+              Baixar PDF
             </Button>
-            <Button onClick={handleRequestQuote} variant="outline" className="w-full text-sm gap-1.5">
-              <Send className="w-4 h-4" />
-              Proposta Detalhada
+            <Button
+              onClick={handleProposta}
+              variant="outline"
+              className="w-full text-xs gap-1 py-2"
+            >
+              <FileText className="w-3.5 h-3.5" />
+              Proj. Estrutural
+            </Button>
+            <Button
+              onClick={() => window.open(buildWhatsApp(true), "_blank")}
+              variant="outline"
+              className="w-full text-xs gap-1 py-2"
+            >
+              <MessageCircle className="w-3.5 h-3.5" />
+              Especialista
             </Button>
           </div>
         </div>
@@ -394,7 +513,7 @@ TOTAL ESTIMADO: ${fmt(valorTotal)}
         <div className="bg-muted/30 p-3 rounded-lg text-xs text-muted-foreground space-y-1">
           <p><strong>Incluso:</strong> Estrutura metálica, cobertura{temFechamento ? ", fechamento" : ""}{isMontado ? ", montagem" : ""}.</p>
           <p><strong>Não incluso:</strong> Fundação, piso, terraplanagem, projetos executivos.</p>
-          <p>* Mobilização cobrada apenas para obras fora de 60 km de Santarém - PA.</p>
+          <p>* Mobilização cobrada apenas para obras fora de 60 km de Santarém — PA.</p>
           <p>* Valores estimados. Orçamento final conforme especificações técnicas.</p>
         </div>
       </CardContent>

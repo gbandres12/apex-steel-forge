@@ -136,8 +136,8 @@ const ShedStructure = () => {
     });
   }, [span, rise]);
 
-  const showWalls = config.closureType === "com-fechamento";
-  const wallFactor = config.closureCoverage === "parcial" ? 0.8 : 1.0;
+  const showWalls = config.closureOption !== "sem-fechamento";
+  const wallFactor = config.closureOption === "parcial" ? 0.8 : 1.0;
   const wallH = colH * wallFactor;
 
   return (

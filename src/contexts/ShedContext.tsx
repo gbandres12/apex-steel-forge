@@ -5,43 +5,46 @@ export type VaoLivre = 10 | 14 | 16 | 20;
 export type PillarType = "com-pilar" | "sem-pilar";
 export type Peireito = 6 | 7;
 export type RoofTileType = "simples" | "termoacustica";
-export type ClosureType = "sem-fechamento" | "com-fechamento";
-export type ClosureCoverage = "parcial" | "total";
+/** "sem-fechamento" | "parcial" = 80% da altura | "total" = 100% da altura */
+export type ClosureOption = "sem-fechamento" | "parcial" | "total";
 export type ServiceType = "fabricado" | "fabricado-montado";
+export type PaymentType = "financiado" | "medicoes";
 
 export interface ShedConfig {
-  // Tipo de estrutura
+  // ── Categoria ─────────────────────────────────────────────────────────────
   structureCategory: StructureCategory;
 
-  // Comercial - Dimensões
+  // ── Comercial — Dimensões ─────────────────────────────────────────────────
   vaoLivre: VaoLivre;
-  profundidade: number; // múltiplos de 6, 6 a 120
+  profundidade: number; // múltiplos de 6 m, de 6 a 120 m
 
-  // Pilar
+  // ── Pilar ─────────────────────────────────────────────────────────────────
   pillarType: PillarType;
-  peireito: Peireito; // só quando com-pilar
+  peireito: Peireito; // só relevante quando com-pilar
 
-  // Telhado cobertura
+  // ── Cobertura ─────────────────────────────────────────────────────────────
   roofTileType: RoofTileType;
 
-  // Fechamento lateral
-  closureType: ClosureType;
-  closureCoverage: ClosureCoverage; // só quando com-fechamento
+  // ── Fechamento lateral (3 opções diretas) ─────────────────────────────────
+  closureOption: ClosureOption;
 
-  // Portão
+  // ── Portão (só quando há fechamento) ─────────────────────────────────────
   gateWidth: number;
   gateHeight: number;
 
-  // Telha do fechamento
+  // ── Telha do fechamento ───────────────────────────────────────────────────
   closureTileType: RoofTileType;
 
-  // Fabricação / Montagem
+  // ── Serviço ───────────────────────────────────────────────────────────────
   serviceType: ServiceType;
 
-  // Logística
-  distanceKm: number; // distância em km de Santarém
+  // ── Logística ─────────────────────────────────────────────────────────────
+  distanceKm: number; // km de Santarém — PA
 
-  // Industrial
+  // ── Pagamento ─────────────────────────────────────────────────────────────
+  paymentType: PaymentType;
+
+  // ── Industrial ────────────────────────────────────────────────────────────
   industrialName: string;
   industrialCnpj: string;
   industrialEmail: string;
@@ -65,8 +68,7 @@ const defaultConfig: ShedConfig = {
 
   roofTileType: "simples",
 
-  closureType: "sem-fechamento",
-  closureCoverage: "parcial",
+  closureOption: "sem-fechamento",
 
   gateWidth: 4,
   gateHeight: 4,
@@ -76,6 +78,8 @@ const defaultConfig: ShedConfig = {
   serviceType: "fabricado",
 
   distanceKm: 0,
+
+  paymentType: "medicoes",
 
   industrialName: "",
   industrialCnpj: "",
@@ -102,8 +106,6 @@ export const ShedProvider = ({ children }: { children: ReactNode }) => {
 
 export const useShed = () => {
   const context = useContext(ShedContext);
-  if (!context) {
-    throw new Error("useShed must be used within ShedProvider");
-  }
+  if (!context) throw new Error("useShed must be used within ShedProvider");
   return context;
 };
