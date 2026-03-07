@@ -1,20 +1,52 @@
 import { createContext, useContext, useState, ReactNode } from "react";
 
+export type StructureCategory = "comercial" | "industrial";
+export type VaoLivre = 10 | 14 | 16 | 20;
+export type PillarType = "com-pilar" | "sem-pilar";
+export type Peireito = 6 | 7;
+export type RoofTileType = "simples" | "termoacustica";
+export type ClosureType = "sem-fechamento" | "com-fechamento";
+export type ClosureCoverage = "parcial" | "total";
+export type ServiceType = "fabricado" | "fabricado-montado";
+
 export interface ShedConfig {
-  length: number;
-  width: number;
-  height: number;
-  showWalls: boolean;
-  roofType: "metalica" | "termoacustica";
-  structureType: "viga-i" | "trelica";
-  hasMezzanine: boolean;
-  mezzanineWidth: number;
-  mezzanineLength: number;
-  city: string;
-  hasTerrain: "sim" | "nao";
-  needsEarthworks: "sim" | "nao";
-  paymentType: "30-entrada" | "5-25-medicao";
-  observations: string;
+  // Tipo de estrutura
+  structureCategory: StructureCategory;
+
+  // Comercial - Dimensões
+  vaoLivre: VaoLivre;
+  profundidade: number; // múltiplos de 6, 6 a 120
+
+  // Pilar
+  pillarType: PillarType;
+  peireito: Peireito; // só quando com-pilar
+
+  // Telhado cobertura
+  roofTileType: RoofTileType;
+
+  // Fechamento lateral
+  closureType: ClosureType;
+  closureCoverage: ClosureCoverage; // só quando com-fechamento
+
+  // Portão
+  gateWidth: number;
+  gateHeight: number;
+
+  // Telha do fechamento
+  closureTileType: RoofTileType;
+
+  // Fabricação / Montagem
+  serviceType: ServiceType;
+
+  // Logística
+  distanceKm: number; // distância em km de Santarém
+
+  // Industrial
+  industrialName: string;
+  industrialCnpj: string;
+  industrialEmail: string;
+  industrialPhone: string;
+  industrialUseType: string;
 }
 
 interface ShedContextType {
@@ -23,20 +55,33 @@ interface ShedContextType {
 }
 
 const defaultConfig: ShedConfig = {
-  length: 24,
-  width: 10,
-  height: 6,
-  showWalls: true,
-  roofType: "metalica",
-  structureType: "viga-i",
-  hasMezzanine: false,
-  mezzanineWidth: 5,
-  mezzanineLength: 10,
-  city: "santarem",
-  hasTerrain: "nao",
-  needsEarthworks: "nao",
-  paymentType: "30-entrada",
-  observations: "",
+  structureCategory: "comercial",
+
+  vaoLivre: 10,
+  profundidade: 24,
+
+  pillarType: "sem-pilar",
+  peireito: 6,
+
+  roofTileType: "simples",
+
+  closureType: "sem-fechamento",
+  closureCoverage: "parcial",
+
+  gateWidth: 4,
+  gateHeight: 4,
+
+  closureTileType: "simples",
+
+  serviceType: "fabricado",
+
+  distanceKm: 0,
+
+  industrialName: "",
+  industrialCnpj: "",
+  industrialEmail: "",
+  industrialPhone: "",
+  industrialUseType: "",
 };
 
 const ShedContext = createContext<ShedContextType | undefined>(undefined);

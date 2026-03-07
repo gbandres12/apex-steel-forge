@@ -1,182 +1,284 @@
-import { useRef } from "react";
+import { useMemo } from "react";
 import { Canvas } from "@react-three/fiber";
 import { OrbitControls } from "@react-three/drei";
 import { useShed } from "@/contexts/ShedContext";
 import * as THREE from "three";
-import { RectangularTruss } from "./RectangularTruss";
-import { IBeamTruss } from "./IBeamTruss";
 import { Environment } from "./Environment";
+import { ArchedTruss } from "./ArchedTruss";
 
+// ─── Curved roof surface (barrel vault) ──────────────────────────────────────
+interface CurvedRoofProps {
+  span: number;      // vão livre (width = Z axis)
+  length: number;    // profundidade (X axis)
+  rise: number;      // apex height above column tops
+  color: string;
+}
+
+const CurvedRoof = ({ span, length, rise, color }: CurvedRoofProps) => {
+  const geometry = useMemo(() => {
+    const SEG_RADIAL = 32;   // smoothness of the arch curve
+    const SEG_LENGTH = Math.max(4, Math.round(length / 6)); // segments along length
+
+    const half = span / 2;
+    // Circle radius: R = (half² + rise²) / (2 * rise)
+    const R = (half * half + rise * rise) / (2 * rise);
+
+    // Total arc angle
+    const halfAngle = Math.asin(half / R);   // angle from bottom (π) to edge
+    const startAngle = Math.PI - halfAngle;
+    const endAngle = Math.PI + halfAngle;
+    const arcSpan = endAngle - startAngle; // always ≤ π
+
+    const positions: number[] = [];
+    const normals: number[] = [];
+    const uvs: number[] = [];
+    const indices: number[] = [];
+
+    // Y offset so that the base of the arch (at the columns) is at y=0
+    const archCenterY = R - rise;
+
+    for (let j = 0; j <= SEG_LENGTH; j++) {
+      const x = (j / SEG_LENGTH) * length - length / 2;
+      const u = j / SEG_LENGTH;
+
+      for (let i = 0; i <= SEG_RADIAL; i++) {
+        const t = i / SEG_RADIAL;
+        const ang = startAngle + t * arcSpan;
+
+        // In the cross-section plane (ZY):
+        //   Z = R * cos(ang)   → runs from -half to +half
+        //   Y = R * sin(ang) - archCenterY  → 0 at edges, rise at apex
+        const z = R * Math.cos(ang);
+        const y = R * Math.sin(ang) - archCenterY;
+
+        positions.push(x, y, z);
+
+        // Normal points outward along the arc radius
+        const ny = Math.sin(ang);
+        const nz = Math.cos(ang);
+        normals.push(0, ny, nz);
+
+        uvs.push(u, t);
+      }
+    }
+
+    // Build triangle indices
+    const cols = SEG_RADIAL + 1;
+    for (let j = 0; j < SEG_LENGTH; j++) {
+      for (let i = 0; i < SEG_RADIAL; i++) {
+        const a = j * cols + i;
+        const b = a + 1;
+        const c = (j + 1) * cols + i;
+        const d = c + 1;
+        indices.push(a, c, b);
+        indices.push(b, c, d);
+      }
+    }
+
+    const geo = new THREE.BufferGeometry();
+    geo.setAttribute("position", new THREE.Float32BufferAttribute(positions, 3));
+    geo.setAttribute("normal", new THREE.Float32BufferAttribute(normals, 3));
+    geo.setAttribute("uv", new THREE.Float32BufferAttribute(uvs, 2));
+    geo.setIndex(indices);
+    return geo;
+  }, [span, length, rise]);
+
+  return (
+    <mesh geometry={geometry} castShadow receiveShadow>
+      <meshStandardMaterial
+        color={color}
+        side={THREE.DoubleSide}
+        roughness={0.4}
+        metalness={0.55}
+      />
+    </mesh>
+  );
+};
+
+// ─── Full shed structure ──────────────────────────────────────────────────────
 const ShedStructure = () => {
   const { config } = useShed();
-  const structureColor = "#8B0000"; // Vermelho escuro
-  const roofColor = config.roofType === "termoacustica" ? "#C0C0C0" : "#808080";
 
-  const pillarSpacing = 6; // Pilares a cada 6m (múltiplos de 6)
-  const pillarCount = Math.ceil(config.length / pillarSpacing) + 1;
-  const pillarPositions: [number, number, number][] = [];
+  const length = config.profundidade;   // runs along X
+  const span = config.vaoLivre;       // runs along Z (clear span)
+  const colH = config.pillarType === "com-pilar" ? config.peireito : 6;
+  const rise = Math.max(1.2, span * 0.22); // arch rise ≈ 22% of span, min 1.2m
 
-  // Posições dos pilares nas laterais
-  for (let i = 0; i < pillarCount; i++) {
-    const x = (i * pillarSpacing) - config.length / 2;
-    pillarPositions.push([x, config.height / 2, -config.width / 2]);
-    pillarPositions.push([x, config.height / 2, config.width / 2]);
-  }
+  const roofColor =
+    config.roofTileType === "termoacustica" ? "#C8C8C8" : "#A0A8B0";
+  const steel = "#8B1010";
 
-  // Número de treliças (uma a cada 6m)
-  const trussCount = Math.floor(config.length / 6);
-  const trussPositions: [number, number, number][] = [];
+  // Column grid: every 6 m along X, two per row (left & right of span)
+  const colSpacing = 6;
+  const colCount = Math.ceil(length / colSpacing) + 1;
+  const colPositionsX: number[] = Array.from(
+    { length: colCount },
+    (_, i) => i * colSpacing - length / 2
+  );
 
-  for (let i = 0; i < trussCount; i++) {
-    const x = (i * 6) - config.length / 2 + 3; // Centralizar entre pilares
-    trussPositions.push([x, config.height + 0.75, 0]);
-  }
+  // Purlins (terças) running along X, distributed along the arc
+  const PURLIN_COUNT = 7;
+
+  const purlinArcPositions = useMemo(() => {
+    const half = span / 2;
+    const R = (half * half + rise * rise) / (2 * rise);
+    const archCenterY = R - rise;
+    const halfAngle = Math.asin(half / R);
+    const startAngle = Math.PI - halfAngle;
+    const arcSpan = 2 * halfAngle;
+
+    return Array.from({ length: PURLIN_COUNT }, (_, i) => {
+      const t = i / (PURLIN_COUNT - 1);
+      const ang = startAngle + t * arcSpan;
+      const z = Math.round(10000 * (span / 2) * Math.cos(Math.PI - ang)) / 10000; // flip for our coord
+      const y = (Math.sin(ang) * R) - archCenterY;
+      return { z, y };
+    });
+  }, [span, rise]);
+
+  const showWalls = config.closureType === "com-fechamento";
+  const wallFactor = config.closureCoverage === "parcial" ? 0.8 : 1.0;
+  const wallH = colH * wallFactor;
 
   return (
     <group>
-      {/* Pilares */}
-      {pillarPositions.map((pos, idx) => (
-        <mesh key={`pillar-${idx}`} position={pos}>
-          <boxGeometry args={[0.3, config.height, 0.3]} />
-          <meshStandardMaterial color={structureColor} />
+      {/* ── Columns ── */}
+      {colPositionsX.map((cx) => (
+        <group key={`cols-${cx}`}>
+          {/* Left column */}
+          <mesh position={[cx, colH / 2, -span / 2]}>
+            <boxGeometry args={[0.25, colH, 0.25]} />
+            <meshStandardMaterial color={steel} roughness={0.4} metalness={0.7} />
+          </mesh>
+          {/* Right column */}
+          <mesh position={[cx, colH / 2, span / 2]}>
+            <boxGeometry args={[0.25, colH, 0.25]} />
+            <meshStandardMaterial color={steel} roughness={0.4} metalness={0.7} />
+          </mesh>
+          {/* Top rail connecting the two columns */}
+          <mesh position={[cx, colH, 0]}>
+            <boxGeometry args={[0.2, 0.2, span]} />
+            <meshStandardMaterial color={steel} roughness={0.4} metalness={0.7} />
+          </mesh>
+        </group>
+      ))}
+
+      {/* ── Side longitudinal rails (eaves beams) ── */}
+      <mesh position={[0, colH, -span / 2]}>
+        <boxGeometry args={[length, 0.2, 0.2]} />
+        <meshStandardMaterial color={steel} roughness={0.4} metalness={0.7} />
+      </mesh>
+      <mesh position={[0, colH, span / 2]}>
+        <boxGeometry args={[length, 0.2, 0.2]} />
+        <meshStandardMaterial color={steel} roughness={0.4} metalness={0.7} />
+      </mesh>
+
+      {/* ── Arched truss frames (one per column line) ── */}
+      {colPositionsX.map((cx) => (
+        <ArchedTruss
+          key={`truss-${cx}`}
+          span={span}
+          riseHeight={rise}
+          position={[cx, colH, 0]}
+        />
+      ))}
+
+      {/* ── Purlins (terças) along the arch, running the full length ── */}
+      {purlinArcPositions.map(({ z, y }, idx) => (
+        <mesh key={`purlin-${idx}`} position={[0, colH + y, z]}>
+          <boxGeometry args={[length, 0.12, 0.12]} />
+          <meshStandardMaterial color={steel} roughness={0.5} metalness={0.5} />
         </mesh>
       ))}
 
-      {/* Vigas longitudinais */}
-      <mesh position={[0, config.height, -config.width / 2]}>
-        <boxGeometry args={[config.length, 0.3, 0.3]} />
-        <meshStandardMaterial color={structureColor} />
-      </mesh>
-      <mesh position={[0, config.height, config.width / 2]}>
-        <boxGeometry args={[config.length, 0.3, 0.3]} />
-        <meshStandardMaterial color={structureColor} />
-      </mesh>
+      {/* ── Curved roof surface ── */}
+      <group position={[0, colH, 0]}>
+        <CurvedRoof span={span} length={length} rise={rise} color={roofColor} />
+      </group>
 
-      {/* Vigas / Treliças transversais */}
-      {Array.from({ length: pillarCount }).map((_, i) => {
-        const x = (i * pillarSpacing) - config.length / 2;
-        if (config.structureType === "viga-i") {
-          // Viga I posicionada no topo dos pilares
-          return (
-            <IBeamTruss
-              key={`ibeam-${i}`}
-              width={config.width}
-              position={[x, config.height + 0.4, 0]}
-            />
-          );
-        } else {
-          // Treliça retangular
-          return (
-            <RectangularTruss
-              key={`truss-${i}`}
-              width={config.width}
-              height={1.5}
-              position={[x, config.height + 0.75, 0]}
-            />
-          );
-        }
-      })}
-
-      {/* Cobertura - levemente acima das treliças */}
-      <mesh position={[0, config.height + 1.6, 0]} rotation={[0, 0, 0]} castShadow receiveShadow>
-        <boxGeometry args={[config.length, 0.08, config.width]} />
-        <meshStandardMaterial color={roofColor} side={THREE.DoubleSide} />
-      </mesh>
-
-      {/* Paredes (se ativado) */}
-      {config.showWalls && (
+      {/* ── Lateral closure walls ── */}
+      {showWalls && (
         <>
-          {/* Parede frontal */}
-          <mesh position={[-config.length / 2, config.height / 2, 0]}>
-            <boxGeometry args={[0.1, config.height, config.width]} />
-            <meshStandardMaterial color="#DCDCDC" transparent opacity={0.3} />
+          <mesh position={[-length / 2, wallH / 2, 0]}>
+            <boxGeometry args={[0.08, wallH, span]} />
+            <meshStandardMaterial color="#B0C4DE" transparent opacity={0.35} side={THREE.DoubleSide} />
           </mesh>
-          {/* Parede traseira */}
-          <mesh position={[config.length / 2, config.height / 2, 0]}>
-            <boxGeometry args={[0.1, config.height, config.width]} />
-            <meshStandardMaterial color="#DCDCDC" transparent opacity={0.3} />
+          <mesh position={[length / 2, wallH / 2, 0]}>
+            <boxGeometry args={[0.08, wallH, span]} />
+            <meshStandardMaterial color="#B0C4DE" transparent opacity={0.35} side={THREE.DoubleSide} />
           </mesh>
-          {/* Paredes laterais */}
-          <mesh position={[0, config.height / 2, -config.width / 2]}>
-            <boxGeometry args={[config.length, config.height, 0.1]} />
-            <meshStandardMaterial color="#DCDCDC" transparent opacity={0.3} />
+          <mesh position={[0, wallH / 2, -span / 2]}>
+            <boxGeometry args={[length, wallH, 0.08]} />
+            <meshStandardMaterial color="#B0C4DE" transparent opacity={0.35} side={THREE.DoubleSide} />
           </mesh>
-          <mesh position={[0, config.height / 2, config.width / 2]}>
-            <boxGeometry args={[config.length, config.height, 0.1]} />
-            <meshStandardMaterial color="#DCDCDC" transparent opacity={0.3} />
+          <mesh position={[0, wallH / 2, span / 2]}>
+            <boxGeometry args={[length, wallH, 0.08]} />
+            <meshStandardMaterial color="#B0C4DE" transparent opacity={0.35} side={THREE.DoubleSide} />
           </mesh>
         </>
-      )}
-
-      {/* Mezanino (se ativado) */}
-      {config.hasMezzanine && (
-        <group>
-          <mesh position={[0, config.height / 2, 0]}>
-            <boxGeometry args={[config.mezzanineLength, 0.2, config.mezzanineWidth]} />
-            <meshStandardMaterial color="#A9A9A9" />
-          </mesh>
-          {/* Pilares do mezanino */}
-          {[
-            [-config.mezzanineLength / 2, config.height / 4, -config.mezzanineWidth / 2],
-            [config.mezzanineLength / 2, config.height / 4, -config.mezzanineWidth / 2],
-            [-config.mezzanineLength / 2, config.height / 4, config.mezzanineWidth / 2],
-            [config.mezzanineLength / 2, config.height / 4, config.mezzanineWidth / 2],
-          ].map((pos, idx) => (
-            <mesh key={`mez-pillar-${idx}`} position={pos as [number, number, number]}>
-              <boxGeometry args={[0.2, config.height / 2, 0.2]} />
-              <meshStandardMaterial color={structureColor} />
-            </mesh>
-          ))}
-        </group>
       )}
     </group>
   );
 };
 
+// ─── Main exported component ──────────────────────────────────────────────────
 export const ShedVisualizer = () => {
   const { config } = useShed();
-  const maxDimension = Math.max(config.length, config.width, config.height);
+  const length = config.profundidade;
+  const span = config.vaoLivre;
+  const colH = config.pillarType === "com-pilar" ? config.peireito : 6;
+  const maxDim = Math.max(length, span, colH);
+
+  // Camera: positioned to reveal the arch — lower & slightly front/side
+  const camDist = maxDim * 1.5;
+
+  if (config.structureCategory === "industrial") {
+    return (
+      <div className="w-full h-full bg-gradient-to-b from-slate-800 to-slate-900 flex items-center justify-center">
+        <div className="text-center text-slate-400 space-y-4">
+          <div className="text-6xl">🏭</div>
+          <p className="text-lg font-semibold text-slate-300">Estrutura Industrial</p>
+          <p className="text-sm max-w-xs">Preencha o formulário ao lado para solicitar proposta personalizada com análise técnica.</p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="w-full h-full bg-gradient-to-b from-sky-300 to-sky-100">
       <Canvas
         shadows
         camera={{
-          position: [maxDimension * 1.8, maxDimension * 1.2, maxDimension * 1.8],
-          fov: 50,
+          position: [camDist * 1.1, camDist * 0.55, camDist * 0.9],
+          fov: 48,
         }}
       >
-        {/* Iluminação melhorada com sombras */}
-        <ambientLight intensity={0.5} />
+        <ambientLight intensity={0.55} />
         <directionalLight
-          position={[50, 50, 30]}
-          intensity={1.2}
+          position={[60, 60, 40]}
+          intensity={1.3}
           castShadow
           shadow-mapSize-width={2048}
           shadow-mapSize-height={2048}
-          shadow-camera-far={200}
-          shadow-camera-left={-50}
-          shadow-camera-right={50}
-          shadow-camera-top={50}
-          shadow-camera-bottom={-50}
+          shadow-camera-far={300}
+          shadow-camera-left={-80}
+          shadow-camera-right={80}
+          shadow-camera-top={80}
+          shadow-camera-bottom={-80}
         />
-        <directionalLight position={[-20, 20, -20]} intensity={0.3} />
-        <hemisphereLight args={["#87CEEB", "#6B8E23", 0.4]} />
+        <directionalLight position={[-30, 30, -20]} intensity={0.35} />
+        <hemisphereLight args={["#87CEEB", "#6B8E23", 0.45]} />
 
-        {/* Controles de órbita */}
         <OrbitControls
-          enablePan={true}
-          enableZoom={true}
-          enableRotate={true}
-          minDistance={10}
-          maxDistance={maxDimension * 4}
-          maxPolarAngle={Math.PI / 2.1} // Limitar rotação para não ir abaixo do chão
+          enablePan
+          enableZoom
+          enableRotate
+          minDistance={8}
+          maxDistance={maxDim * 5}
+          maxPolarAngle={Math.PI / 2.05}
         />
 
-        {/* Ambiente (árvores, plantas, terreno) */}
-        <Environment shedLength={config.length} shedWidth={config.width} />
-
-        {/* Estrutura do galpão */}
+        <Environment shedLength={length} shedWidth={span} />
         <ShedStructure />
       </Canvas>
     </div>
