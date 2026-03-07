@@ -45,9 +45,12 @@ export const ArchedTruss = ({ span, riseHeight = 2.5, position }: ArchedTrussPro
         const list: ReturnType<typeof tube>[] = [];
 
         const half = span / 2;
-        // Arch radius — using circle formula: R = (half² + rise²) / (2 * rise)
+        // Arch radius from circle formula
         const R = (half * half + riseHeight * riseHeight) / (2 * riseHeight);
-        const archCenterY = -R + riseHeight; // y-coord of circle center relative to chord base
+        // archCenterY: distance from chord (y=0) to circle center (below chord)
+        const archCenterY = R - riseHeight;
+        // halfAngle: angle from apex (π/2) to each edge
+        const halfAngle = Math.asin(half / R);
 
         const SEG = 12; // arc segments
 
@@ -59,35 +62,32 @@ export const ArchedTruss = ({ span, riseHeight = 2.5, position }: ArchedTrussPro
             const t0 = i / SEG;
             const t1 = (i + 1) / SEG;
 
-            // angle mapped so that at t=0 → left end, t=0.5 → apex, t=1 → right end
-            const ang0 = Math.PI + t0 * Math.PI; // π → 2π (bottom half of circle flipped upward)
-            const ang1 = Math.PI + t1 * Math.PI;
+            // Sweep through the TOP of the circle (π/2 = apex)
+            // at t=0 → left edge, t=0.5 → apex, t=1 → right edge
+            const ang0 = (Math.PI / 2 + halfAngle) + t0 * (-2 * halfAngle);
+            const ang1 = (Math.PI / 2 + halfAngle) + t1 * (-2 * halfAngle);
 
-            // Positions on the circle (centered at archCenterY on Y, zero on Z needs remapping)
-            // We use ZY plane: Z = R*cos(ang), Y = R*sin(ang) + (R - riseHeight)
             const z0 = R * Math.cos(ang0);
-            const y0 = R * Math.sin(ang0) + (R - riseHeight);
+            const y0 = R * Math.sin(ang0) - archCenterY; // 0 at edges, riseHeight at apex
             const z1 = R * Math.cos(ang1);
-            const y1 = R * Math.sin(ang1) + (R - riseHeight);
+            const y1 = R * Math.sin(ang1) - archCenterY;
 
             list.push(tube(0, y0, z0, 0, y1, z1, chordR, `arc-${i}`));
 
             // ── Verticals from chord to arch ──
             const zm = (z0 + z1) / 2;
             const ym = (y0 + y1) / 2;
-            // only draw if not near the ends (already have pillar there)
             if (Math.abs(zm) < half * 0.92) {
                 list.push(tube(0, 0, zm, 0, ym, zm, barR, `vert-${i}`));
             }
 
             // ── Diagonals for bracing ──
             if (i < SEG - 1) {
-                const ang2 = Math.PI + (i + 0.5) / SEG * Math.PI;
-                const ang3 = Math.PI + (i + 1.5) / SEG * Math.PI;
-                const zd0 = R * Math.cos(ang2);
-                const yd0 = R * Math.sin(ang2) + (R - riseHeight);
-                const zd1 = R * Math.cos(ang3);
-                const yd1 = R * Math.sin(ang3) + (R - riseHeight);
+                const angD0 = (Math.PI / 2 + halfAngle) + ((i + 0.5) / SEG) * (-2 * halfAngle);
+                const angD1 = (Math.PI / 2 + halfAngle) + ((i + 1.5) / SEG) * (-2 * halfAngle);
+                const zd0 = R * Math.cos(angD0);
+                const yd0 = R * Math.sin(angD0) - archCenterY;
+                const zd1 = R * Math.cos(angD1);
                 list.push(tube(0, yd0, zd0, 0, 0, zd1, barR * 0.8, `diag-${i}`));
             }
         }

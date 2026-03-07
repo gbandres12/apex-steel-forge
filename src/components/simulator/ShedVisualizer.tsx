@@ -23,11 +23,12 @@ const CurvedRoof = ({ span, length, rise, color }: CurvedRoofProps) => {
     // Circle radius: R = (half² + rise²) / (2 * rise)
     const R = (half * half + rise * rise) / (2 * rise);
 
-    // Total arc angle
-    const halfAngle = Math.asin(half / R);   // angle from bottom (π) to edge
-    const startAngle = Math.PI - halfAngle;
-    const endAngle = Math.PI + halfAngle;
-    const arcSpan = endAngle - startAngle; // always ≤ π
+    // Sweep through the TOP of the circle (π/2) — convex arch curving upward.
+    // halfAngle = angle from apex (π/2) to each edge of the arc.
+    const halfAngle = Math.asin(half / R);
+    // Start at left edge, end at right edge, passing through π/2 (apex).
+    const startAngle = Math.PI / 2 + halfAngle; // left edge
+    const arcSpan = -2 * halfAngle;           // sweeps right (decreasing angle)
 
     const positions: number[] = [];
     const normals: number[] = [];
@@ -122,16 +123,15 @@ const ShedStructure = () => {
   const purlinArcPositions = useMemo(() => {
     const half = span / 2;
     const R = (half * half + rise * rise) / (2 * rise);
-    const archCenterY = R - rise;
     const halfAngle = Math.asin(half / R);
-    const startAngle = Math.PI - halfAngle;
-    const arcSpan = 2 * halfAngle;
+    const startAngle = Math.PI / 2 + halfAngle; // left edge → sweeps through apex (π/2)
+    const arcSpan = -2 * halfAngle;           // decreasing → right edge
 
     return Array.from({ length: PURLIN_COUNT }, (_, i) => {
       const t = i / (PURLIN_COUNT - 1);
       const ang = startAngle + t * arcSpan;
-      const z = Math.round(10000 * (span / 2) * Math.cos(Math.PI - ang)) / 10000; // flip for our coord
-      const y = (Math.sin(ang) * R) - archCenterY;
+      const z = R * Math.cos(ang);           // -half → 0 → +half
+      const y = R * Math.sin(ang) - (R - rise); // 0 → rise → 0
       return { z, y };
     });
   }, [span, rise]);
