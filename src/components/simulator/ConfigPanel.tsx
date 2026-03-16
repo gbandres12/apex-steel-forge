@@ -445,7 +445,6 @@ export const ConfigPanel = () => {
                       ["logistico", "Logístico"],
                       ["data-center", "Data Center"],
                       ["atacadista", "Atacadista"],
-                      ["multiplos-pavimentos", "Prédio de múltiplos pavimentos"],
                       ["combustiveis", "Combustíveis"],
                       ["graos", "Armazenagem de grãos"],
                       ["portuario", "Portuário"],
