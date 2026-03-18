@@ -19,7 +19,7 @@ const PRICING = {
   pesoEstruturaM2: 12,      // kg/m² de planta
   pesoFechamentoM2: 7,      // kg/m² de fechamento
   maoDeObraPor600m2: 20_000,// R$ a cada 600 m²
-  raioIsencao: 60,          // km de Santarém sem mobilização
+  raioIsencao: 65,          // km de Santarém sem mobilização
   jurosMes: 0.025,          // 2,5 % a.m. (financiado)
 } as const;
 
@@ -109,8 +109,9 @@ export const SummaryCard = () => {
   const numCargas = Math.ceil(pesoTotal / 15_000);
   const valorTransporte =
     config.distanceKm > PRICING.raioIsencao
-      ? numCargas * config.distanceKm * PRICING.mobilizacaoKmCarga
+      ? numCargas * (config.distanceKm - PRICING.raioIsencao) * PRICING.mobilizacaoKmCarga
       : 0;
+  const kmCobrado = Math.max(0, config.distanceKm - PRICING.raioIsencao);
 
   // ── Total ─────────────────────────────────────────────────────────────────
   const valorTotal =
@@ -160,6 +161,7 @@ export const SummaryCard = () => {
 
 🏗️ *Especificações:*
 • Estrutura: ${config.pillarType === "com-pilar" ? `Com Pilar (pé-direito ${pedireito}m)` : "Sem Pilar"}
+• Telhado: ${config.roofShape === "arco" ? "Arco" : "Duas Águas"}
 • Cobertura: ${config.roofTileType === "termoacustica" ? "Termoacústica EPS 30mm" : "Telha Simples 0,43mm"}
 • Fechamento: ${fechDesc}
 • Serviço: ${isMontado ? "Fabricação + Montagem" : "Apenas Fabricação"}
@@ -167,7 +169,7 @@ export const SummaryCard = () => {
 💰 *Resumo Financeiro:*
 • Estrutura: ${fmt(valorEstrutura)}
 • Cobertura: ${fmt(valorCobertura)}
-${temFechamento ? `• Fechamento: ${fmt(valorFechamento)}\n` : ""}${isMontado ? `• Montagem: ${fmt(valorMontagem)}\n• Mão de Obra: ${fmt(valorMaoDeObra)}\n` : ""}${valorTransporte > 0 ? `• Transporte (${numCargas} carga${numCargas > 1 ? "s" : ""}, ${config.distanceKm} km): ${fmt(valorTransporte)}\n` : ""}
+${temFechamento ? `• Fechamento: ${fmt(valorFechamento)}\n` : ""}${isMontado ? `• Montagem: ${fmt(valorMontagem)}\n• Mão de Obra: ${fmt(valorMaoDeObra)}\n` : ""}${valorTransporte > 0 ? `• Transporte (${numCargas} carga${numCargas > 1 ? "s" : ""}, excedente ${kmCobrado}km): ${fmt(valorTransporte)}\n` : ""}
 • *TOTAL: ${fmt(valorTotal)}*
 • *Valor por m²: ${fmt(valorM2)}*
 • Pagamento: ${pgDesc}
@@ -199,6 +201,7 @@ Gostaria de uma proposta detalhada!`;
         "ESPECIFICAÇÕES",
         "-".repeat(30),
         `Estrutura        : ${config.pillarType === "com-pilar" ? `Com Pilar (pé-direito ${pedireito}m)` : "Sem Pilar"}`,
+        `Telhado          : ${config.roofShape === "arco" ? "Arco" : "Duas Águas"}`,
         `Cobertura        : ${config.roofTileType === "termoacustica" ? "Termoacústica EPS 30mm" : "Telha Simples 0,43mm"}`,
         `Fechamento       : ${fechDesc}`,
         ...(temFechamento ? [`Área Fechamento  : ${fmtN(areaFechamento)} m²`] : []),
@@ -233,7 +236,7 @@ Gostaria de uma proposta detalhada!`;
         "",
         "=".repeat(46),
         "* Valores estimados. Orçamento final conforme especificações técnicas.",
-        "* Mobilização cobrada apenas para obras fora de 60 km de Santarém — PA.",
+        "* Mobilização cobrada apenas para km excedente de 65 km de Santarém — PA.",
       ].join("\n");
 
       const blob = new Blob([content], { type: "text/plain;charset=utf-8" });
@@ -374,7 +377,7 @@ Gostaria de uma proposta detalhada!`;
             value={fmt(valorEstrutura)}
           />
           <LineItem
-            label={`Cobertura (${config.roofTileType === "termoacustica" ? "Termoacústica" : "Simples"})`}
+            label={`Cobertura (${config.roofTileType === "termoacustica" ? "Termoacústica" : "Simples"} - ${config.roofShape === "arco" ? "Arco" : "Duas Águas"})`}
             sub={`R$ ${precoTelha}/m² × ${areaPlanta} m²`}
             value={fmt(valorCobertura)}
           />
@@ -412,7 +415,7 @@ Gostaria de uma proposta detalhada!`;
           {valorTransporte > 0 && (
             <LineItem
               label="Transporte / Mobilização"
-              sub={`${numCargas} carga${numCargas > 1 ? "s" : ""} × ${config.distanceKm} km × R$ 18/km`}
+              sub={`${numCargas} carga${numCargas > 1 ? "s" : ""} × ${kmCobrado} km (excedente) × R$ 18/km`}
               value={fmt(valorTransporte)}
             />
           )}
@@ -513,7 +516,7 @@ Gostaria de uma proposta detalhada!`;
         <div className="bg-muted/30 p-3 rounded-lg text-xs text-muted-foreground space-y-1">
           <p><strong>Incluso:</strong> Estrutura metálica, cobertura{temFechamento ? ", fechamento" : ""}{isMontado ? ", montagem" : ""}.</p>
           <p><strong>Não incluso:</strong> Fundação, piso, terraplanagem, projetos executivos.</p>
-          <p>* Mobilização cobrada apenas para obras fora de 60 km de Santarém — PA.</p>
+          <p>* Mobilização cobrada apenas pelos km que excedem 65 km de Santarém — PA.</p>
           <p>* Valores estimados. Orçamento final conforme especificações técnicas.</p>
         </div>
       </CardContent>
