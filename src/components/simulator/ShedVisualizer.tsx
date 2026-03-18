@@ -245,29 +245,31 @@ export const ShedVisualizer = () => {
   }
 
   return (
-    <div className="w-full h-full bg-gradient-to-b from-sky-300 to-sky-100">
+    <div className="w-full h-full bg-gradient-to-b from-slate-200 to-slate-50">
       <Canvas
         shadows
+        gl={{ antialias: true, toneMapping: THREE.ACESFilmicToneMapping, toneMappingExposure: 1.1 }}
         camera={{
           position: [camDist * 1.1, camDist * 0.55, camDist * 0.9],
           fov: 48,
         }}
       >
-        <ambientLight intensity={0.55} />
+        <ambientLight intensity={0.4} />
         <directionalLight
-          position={[60, 60, 40]}
-          intensity={1.3}
+          position={[60, 80, 40]}
+          intensity={1.5}
           castShadow
-          shadow-mapSize-width={2048}
-          shadow-mapSize-height={2048}
+          shadow-mapSize-width={4096}
+          shadow-mapSize-height={4096}
+          shadow-bias={-0.0001}
           shadow-camera-far={300}
           shadow-camera-left={-80}
           shadow-camera-right={80}
           shadow-camera-top={80}
           shadow-camera-bottom={-80}
         />
-        <directionalLight position={[-30, 30, -20]} intensity={0.35} />
-        <hemisphereLight args={["#87CEEB", "#6B8E23", 0.45]} />
+        <directionalLight position={[-30, 30, -20]} intensity={0.5} />
+        <hemisphereLight args={["#ffffff", "#e2e8f0", 0.6]} />
 
         <OrbitControls
           enablePan

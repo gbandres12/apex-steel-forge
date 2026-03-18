@@ -5,7 +5,7 @@ import heroImage from "@/assets/hero-structure.jpg";
 const Splash = () => {
   const navigate = useNavigate();
 
-  const handleSelect = (porte: "medio" | "grande") => {
+  const handleSelect = (porte: "comercial" | "industrial") => {
     localStorage.setItem("porte-galpao", porte);
     navigate(`/galpao-logistico?porte=${porte}`);
   };
@@ -48,12 +48,12 @@ const Splash = () => {
         <div className="grid md:grid-cols-2 gap-6 mb-16">
           {/* Card Médio */}
           <button
-            onClick={() => handleSelect("medio")}
+            onClick={() => handleSelect("comercial")}
             className="group bg-card border border-border rounded-xl p-8 text-left hover:border-primary/50 hover:shadow-[var(--shadow-glow)] transition-all duration-300"
           >
             <Warehouse className="w-10 h-10 text-primary mb-4" />
             <h3 className="text-2xl font-bold mb-2">
-              A partir de <span className="text-primary">1.000 m²</span>
+              Galpão <span className="text-primary">Comercial</span>
             </h3>
             <p className="text-muted-foreground text-sm mb-6">
               Operações médias, centros de distribuição regional e armazéns logísticos.
@@ -65,12 +65,12 @@ const Splash = () => {
 
           {/* Card Grande */}
           <button
-            onClick={() => handleSelect("grande")}
+            onClick={() => handleSelect("industrial")}
             className="group bg-card border border-border rounded-xl p-8 text-left hover:border-primary/50 hover:shadow-[var(--shadow-glow)] transition-all duration-300"
           >
             <Building2 className="w-10 h-10 text-primary mb-4" />
             <h3 className="text-2xl font-bold mb-2">
-              A partir de <span className="text-primary">3.000 m²</span>
+              Galpão <span className="text-primary">Industrial</span>
             </h3>
             <p className="text-muted-foreground text-sm mb-6">
               Grandes centros logísticos, plantas industriais e operações de grande escala.
