@@ -8,7 +8,7 @@ import {
 import { Input } from "@/components/ui/input";
 import {
   Building2, Factory, Columns2, Layers,
-  Fence, Settings2, Truck, Ruler, CreditCard,
+  Fence, Settings2, Truck, Ruler, CreditCard, Wheat
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
@@ -28,6 +28,7 @@ const PROFUNDIDADES = Array.from({ length: 20 }, (_, i) => (i + 1) * 6);
 export const ConfigPanel = () => {
   const { config, updateConfig } = useShed();
   const isComercial = config.structureCategory === "comercial";
+  const isAgricola = config.structureCategory === "agricola";
   const temFechamento = config.closureOption !== "sem-fechamento";
 
   return (
@@ -45,21 +46,23 @@ export const ConfigPanel = () => {
         {/* ══ 1. CATEGORIA ════════════════════════════════════════════════════ */}
         <section>
           <SectionTitle icon={Building2} title="Tipo de Estrutura" />
-          <div className="grid grid-cols-2 gap-3">
-            {(["comercial", "industrial"] as const).map((cat) => (
+          <div className="grid grid-cols-3 gap-2">
+            {(["comercial", "industrial", "agricola"] as const).map((cat) => (
               <button
                 key={cat}
                 type="button"
                 onClick={() => updateConfig({ structureCategory: cat })}
                 className={cn(
-                  "flex flex-col items-center gap-2 p-4 rounded-xl border-2 transition-all text-sm font-semibold",
+                  "flex flex-col items-center justify-center p-3 rounded-xl border-2 transition-all text-xs font-semibold text-center h-[76px]",
                   config.structureCategory === cat
                     ? "border-primary bg-primary/10 text-primary"
                     : "border-border hover:border-primary/40 text-muted-foreground",
                 )}
               >
-                {cat === "comercial" ? <Building2 className="w-6 h-6" /> : <Factory className="w-6 h-6" />}
-                {cat === "comercial" ? "Comercial" : "Industrial"}
+                {cat === "comercial" && <Building2 className="w-5 h-5 mb-1.5" />}
+                {cat === "industrial" && <Factory className="w-5 h-5 mb-1.5" />}
+                {cat === "agricola" && <Wheat className="w-5 h-5 mb-1.5" />}
+                {cat === "comercial" ? "Logístico" : cat === "industrial" ? "Industrial" : "Silos / Agro"}
               </button>
             ))}
           </div>
@@ -339,7 +342,7 @@ export const ConfigPanel = () => {
                   {
                     value: "fabricado-montado",
                     title: "Fabricação + Montagem",
-                    desc: "+R$ 50/m² planta · +R$ 25/m² fechamento · mão de obra R$ 20k/600m²",
+                    desc: "+R$ 50/m² planta · +R$ 25/m² fechamento (Mobilização de equipe p/ montagem fora de Santarém: R$ 20k/600m²)",
                   },
                 ].map((opt) => (
                   <button
@@ -362,7 +365,7 @@ export const ConfigPanel = () => {
 
             {/* ── 8. LOGÍSTICA ── */}
             <section>
-              <SectionTitle icon={Truck} title="Logística / Transporte" />
+              <SectionTitle icon={Truck} title="Frete e Mobilização" />
               <Label className="text-sm text-muted-foreground mb-2 block">
                 Distância de Santarém — PA (km)
               </Label>
@@ -375,8 +378,8 @@ export const ConfigPanel = () => {
               />
               <p className="text-xs text-muted-foreground mt-2">
                 {config.distanceKm <= 65
-                  ? "✅ Dentro do raio de 65 km — mobilização não cobrada"
-                  : `⚠️ Fora do raio — mobilização: (km excedentes) × R$ 18 × nº de cargas`}
+                  ? "✅ Dentro do raio de 65 km — isento de frete e de mobilização de equipe."
+                  : `⚠️ Fora de 65km: Frete R$ 18/km por carga. Mobilização de equipe (se houver montagem): R$ 20.000 a cada 600m².`}
               </p>
             </section>
 
@@ -425,8 +428,104 @@ export const ConfigPanel = () => {
           </>
         )}
 
+        {/* ══ FLUXO AGRÍCOLA (SILOS) ══════════════════════════════════════════ */}
+        {isAgricola && (
+          <>
+            <section>
+              <SectionTitle icon={Wheat} title="Capacidade do Silo" />
+              <div className="space-y-4">
+                <div className="grid grid-cols-2 gap-2">
+                  {[10000, 20000, 50000, 100000].map((cap) => (
+                    <button
+                      key={cap}
+                      type="button"
+                      onClick={() => updateConfig({ siloCapacityBags: cap })}
+                      className={cn(
+                        "py-3 rounded-lg border-2 text-sm font-bold transition-all",
+                        config.siloCapacityBags === cap
+                          ? "border-primary bg-primary/10 text-primary"
+                          : "border-border hover:border-primary/40 text-muted-foreground",
+                      )}
+                    >
+                      {cap.toLocaleString("pt-BR")} sacas
+                    </button>
+                  ))}
+                </div>
+                <div className="pt-2">
+                   <Label className="text-xs text-muted-foreground block mb-2">Capacidade personalizada em sacas (60kg)</Label>
+                   <Input 
+                      type="number" min={1000} step={1000}
+                      value={config.siloCapacityBags}
+                      onChange={(e) => updateConfig({ siloCapacityBags: Number(e.target.value) })}
+                      className="bg-background"
+                   />
+                </div>
+              </div>
+            </section>
+
+            <section>
+              <SectionTitle icon={Settings2} title="Configuração do Fundo" />
+              <div className="grid grid-cols-2 gap-3 mb-2">
+                {[
+                  { value: "fundo-plano", label: "Fundo Plano" },
+                  { value: "fundo-conico", label: "Fundo Cônico" }
+                ].map((opt) => (
+                  <button
+                    key={opt.value}
+                    type="button"
+                    onClick={() => updateConfig({ siloType: opt.value as any })}
+                    className={cn(
+                      "py-3 px-2 rounded-xl border-2 text-sm font-semibold transition-all flex flex-col items-center",
+                      config.siloType === opt.value
+                        ? "border-primary bg-primary/10 text-primary"
+                        : "border-border hover:border-primary/40 text-muted-foreground",
+                    )}
+                  >
+                    <span>{opt.label}</span>
+                  </button>
+                ))}
+              </div>
+              <p className="text-xs text-muted-foreground text-center">
+                {config.siloType === "fundo-conico" 
+                  ? "Ideal para autolimpeza total e menor necessidade de obras civis complexas subterrâneas." 
+                  : "Ideal para grandes volumes, requer fundação com canais de aeração embutidos."}
+              </p>
+            </section>
+
+            <section>
+              <SectionTitle icon={Layers} title="Acessórios e Opcionais" />
+              <div className="space-y-3">
+                <label className="flex items-center gap-3 p-3 rounded-xl border border-border cursor-pointer hover:border-primary/30 transition-all">
+                  <input
+                    type="checkbox"
+                    checked={config.siloPassarela}
+                    onChange={(e) => updateConfig({ siloPassarela: e.target.checked })}
+                    className="w-4 h-4 text-primary rounded border-border"
+                  />
+                  <div className="flex-1">
+                    <p className="font-semibold text-sm">Passarela Superior</p>
+                    <p className="text-xs text-muted-foreground">+ R$ 15.000 / unidade</p>
+                  </div>
+                </label>
+                <label className="flex items-center gap-3 p-3 rounded-xl border border-border cursor-pointer hover:border-primary/30 transition-all">
+                  <input
+                    type="checkbox"
+                    checked={config.siloAeracao}
+                    onChange={(e) => updateConfig({ siloAeracao: e.target.checked })}
+                    className="w-4 h-4 text-primary rounded border-border"
+                  />
+                  <div className="flex-1">
+                    <p className="font-semibold text-sm">Sistema de Aeração / Termometria</p>
+                    <p className="text-xs text-muted-foreground">+ R$ 8 por saca</p>
+                  </div>
+                </label>
+              </div>
+            </section>
+          </>
+        )}
+
         {/* ══ FLUXO INDUSTRIAL ════════════════════════════════════════════════ */}
-        {!isComercial && (
+        {!isComercial && !isAgricola && (
           <section>
             <div className="bg-amber-500/10 border border-amber-500/30 rounded-xl p-4 mb-6">
               <p className="text-sm text-amber-600 dark:text-amber-400 font-medium">

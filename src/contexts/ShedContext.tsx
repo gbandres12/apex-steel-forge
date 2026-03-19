@@ -1,6 +1,6 @@
 import { createContext, useContext, useState, ReactNode } from "react";
 
-export type StructureCategory = "comercial" | "industrial";
+export type StructureCategory = "comercial" | "industrial" | "agricola";
 export type VaoLivre = 10 | 14 | 16 | 20;
 export type PillarType = "com-pilar" | "sem-pilar";
 export type Peireito = 6 | 7;
@@ -52,6 +52,12 @@ export interface ShedConfig {
   industrialEmail: string;
   industrialPhone: string;
   industrialUseType: string;
+
+  // ── Agrícola (Silos) ──────────────────────────────────────────────────────
+  siloCapacityBags: number;
+  siloType: "fundo-plano" | "fundo-conico";
+  siloPassarela: boolean;
+  siloAeracao: boolean;
 }
 
 interface ShedContextType {
@@ -89,6 +95,11 @@ const defaultConfig: ShedConfig = {
   industrialEmail: "",
   industrialPhone: "",
   industrialUseType: "",
+
+  siloCapacityBags: 20000,
+  siloType: "fundo-plano",
+  siloPassarela: false,
+  siloAeracao: true,
 };
 
 const ShedContext = createContext<ShedContextType | undefined>(undefined);

@@ -1,11 +1,11 @@
 import { useNavigate } from "react-router-dom";
-import { Warehouse, Building2, ArrowRight } from "lucide-react";
+import { Warehouse, Building2, ArrowRight, Wheat } from "lucide-react";
 import heroImage from "@/assets/hero-structure.jpg";
 
 const Splash = () => {
   const navigate = useNavigate();
 
-  const handleSelect = (porte: "comercial" | "industrial") => {
+  const handleSelect = (porte: "comercial" | "industrial" | "agricola") => {
     localStorage.setItem("porte-galpao", porte);
     navigate(`/galpao-logistico?porte=${porte}`);
   };
@@ -45,7 +45,7 @@ const Splash = () => {
         </p>
 
         {/* Cards */}
-        <div className="grid md:grid-cols-2 gap-6 mb-16">
+        <div className="grid md:grid-cols-3 gap-6 mb-16">
           {/* Card Médio */}
           <button
             onClick={() => handleSelect("comercial")}
@@ -74,6 +74,22 @@ const Splash = () => {
             </h3>
             <p className="text-muted-foreground text-sm mb-6">
               Grandes centros logísticos, plantas industriais e operações de grande escala.
+            </p>
+            <span className="inline-flex items-center gap-2 text-primary text-sm font-semibold group-hover:gap-3 transition-all">
+              Selecionar <ArrowRight className="w-4 h-4" />
+            </span>
+          </button>
+          {/* Card Agrícola */}
+          <button
+            onClick={() => handleSelect("agricola")}
+            className="group bg-card border border-border rounded-xl p-8 text-left hover:border-primary/50 hover:shadow-[var(--shadow-glow)] transition-all duration-300"
+          >
+            <Wheat className="w-10 h-10 text-primary mb-4" />
+            <h3 className="text-2xl font-bold mb-2">
+              Silos <span className="text-primary">Agrícolas</span>
+            </h3>
+            <p className="text-muted-foreground text-sm mb-6">
+              Armazenagem de grãos com alta capacidade, aeração e termometria.
             </p>
             <span className="inline-flex items-center gap-2 text-primary text-sm font-semibold group-hover:gap-3 transition-all">
               Selecionar <ArrowRight className="w-4 h-4" />

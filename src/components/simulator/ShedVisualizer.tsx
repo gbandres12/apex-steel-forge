@@ -6,6 +6,7 @@ import * as THREE from "three";
 import { Environment } from "./Environment";
 import { ArchedTruss } from "./ArchedTruss";
 import { GabledTruss } from "./GabledTruss";
+import { SiloStructure } from "./SiloStructure";
 
 // ─── Curved roof surface (barrel vault) ──────────────────────────────────────
 interface CurvedRoofProps {
@@ -284,10 +285,18 @@ export const ShedVisualizer = () => {
   const length = config.profundidade;
   const span = config.vaoLivre;
   const colH = config.pillarType === "com-pilar" ? config.peireito : 6;
-  const maxDim = Math.max(length, span, colH);
+  const isAgricola = config.structureCategory === "agricola";
+
+  let maxDim = Math.max(length, span, colH);
+  if (isAgricola) {
+    const volumeM3 = config.siloCapacityBags * 0.075;
+    const diameter = Math.max(4, Math.pow(volumeM3, 0.35));
+    const cylinderHeight = Math.max(3, volumeM3 / (Math.PI * Math.pow(diameter / 2, 2)));
+    maxDim = Math.max(diameter, cylinderHeight) * 1.2;
+  }
 
   // Camera: positioned to reveal the arch — lower & slightly front/side
-  const camDist = maxDim * 1.5;
+  const camDist = maxDim * 1.6;
 
   if (config.structureCategory === "industrial") {
     return (
@@ -337,8 +346,8 @@ export const ShedVisualizer = () => {
           maxPolarAngle={Math.PI / 2.05}
         />
 
-        <Environment shedLength={length} shedWidth={span} />
-        <ShedStructure />
+        <Environment shedLength={isAgricola ? maxDim : length} shedWidth={isAgricola ? maxDim : span} />
+        {isAgricola ? <SiloStructure /> : <ShedStructure />}
       </Canvas>
     </div>
   );
