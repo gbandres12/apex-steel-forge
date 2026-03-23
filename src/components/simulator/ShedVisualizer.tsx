@@ -5,6 +5,8 @@ import { useShed } from "@/contexts/ShedContext";
 import * as THREE from "three";
 import { Environment } from "./Environment";
 import { ArchedTruss } from "./ArchedTruss";
+import { GabledTruss } from "./GabledTruss";
+import { SiloStructure } from "./SiloStructure";
 
 // ─── Curved roof surface (barrel vault) ──────────────────────────────────────
 interface CurvedRoofProps {
@@ -96,6 +98,29 @@ const CurvedRoof = ({ span, length, rise, color }: CurvedRoofProps) => {
   );
 };
 
+// ─── Gabled roof surface (duas águas) ────────────────────────────────────────
+const GabledRoof = ({ span, length, rise, color }: CurvedRoofProps) => {
+  const half = span / 2;
+  const slopeLength = Math.sqrt(half * half + rise * rise);
+  const angle = Math.atan2(rise, half);
+  
+  return (
+    <group>
+      {/* Left side (negative z) */}
+      <mesh position={[0, rise / 2, -half / 2]} rotation={[-Math.PI / 2 - angle, 0, 0]} castShadow receiveShadow>
+        <planeGeometry args={[length, slopeLength]} />
+        <meshStandardMaterial color={color} side={THREE.DoubleSide} roughness={0.4} metalness={0.55} />
+      </mesh>
+      
+      {/* Right side (positive z) */}
+      <mesh position={[0, rise / 2, half / 2]} rotation={[-Math.PI / 2 + angle, 0, 0]} castShadow receiveShadow>
+        <planeGeometry args={[length, slopeLength]} />
+        <meshStandardMaterial color={color} side={THREE.DoubleSide} roughness={0.4} metalness={0.55} />
+      </mesh>
+    </group>
+  );
+};
+
 // ─── Full shed structure ──────────────────────────────────────────────────────
 const ShedStructure = () => {
   const { config } = useShed();
@@ -108,6 +133,8 @@ const ShedStructure = () => {
   const roofColor =
     config.roofTileType === "termoacustica" ? "#C8C8C8" : "#A0A8B0";
   const steel = "#8B1010";
+  
+  const isArco = config.roofShape === "arco";
 
   // Column grid: every 6 m along X, two per row (left & right of span)
   const colSpacing = 6;
@@ -117,24 +144,42 @@ const ShedStructure = () => {
     (_, i) => i * colSpacing - length / 2
   );
 
-  // Purlins (terças) running along X, distributed along the arc
+  // Purlins (terças) running along X, distributed along the roof shape
   const PURLIN_COUNT = 7;
 
-  const purlinArcPositions = useMemo(() => {
+  const purlinPositions = useMemo(() => {
     const half = span / 2;
-    const R = (half * half + rise * rise) / (2 * rise);
-    const halfAngle = Math.asin(half / R);
-    const startAngle = Math.PI / 2 + halfAngle; // left edge → sweeps through apex (π/2)
-    const arcSpan = -2 * halfAngle;           // decreasing → right edge
-
-    return Array.from({ length: PURLIN_COUNT }, (_, i) => {
-      const t = i / (PURLIN_COUNT - 1);
-      const ang = startAngle + t * arcSpan;
-      const z = R * Math.cos(ang);           // -half → 0 → +half
-      const y = R * Math.sin(ang) - (R - rise); // 0 → rise → 0
-      return { z, y };
-    });
-  }, [span, rise]);
+    
+    if (isArco) {
+      const R = (half * half + rise * rise) / (2 * rise);
+      const halfAngle = Math.asin(half / R);
+      const startAngle = Math.PI / 2 + halfAngle;
+      const arcSpan = -2 * halfAngle;
+  
+      return Array.from({ length: PURLIN_COUNT }, (_, i) => {
+        const t = i / (PURLIN_COUNT - 1);
+        const ang = startAngle + t * arcSpan;
+        const z = R * Math.cos(ang);
+        const y = R * Math.sin(ang) - (R - rise);
+        return { z, y, rotation: [0, 0, 0] as [number, number, number] };
+      });
+    } else {
+      // Duas águas
+      return Array.from({ length: PURLIN_COUNT }, (_, i) => {
+        const t = i / (PURLIN_COUNT - 1); // 0 to 1
+        // z goes from -half to +half
+        const z = -half + t * span;
+        // y is linear interpolation to the apex
+        const y = rise - Math.abs(z / half) * rise;
+        
+        // Purlins usually sit perpendicular to the roof slope, but let's just lay them flat or match slope.
+        const slopeAngle = Math.atan2(rise, half);
+        const rotX = z < 0 ? slopeAngle : -slopeAngle;
+        
+        return { z, y, rotation: [rotX, 0, 0] as [number, number, number] };
+      });
+    }
+  }, [span, rise, isArco]);
 
   const showWalls = config.closureOption !== "sem-fechamento";
   const wallFactor = config.closureOption === "parcial" ? 0.8 : 1.0;
@@ -173,27 +218,40 @@ const ShedStructure = () => {
         <meshStandardMaterial color={steel} roughness={0.4} metalness={0.7} />
       </mesh>
 
-      {/* ── Arched truss frames (one per column line) ── */}
+      {/* ── Truss frames (one per column line) ── */}
       {colPositionsX.map((cx) => (
-        <ArchedTruss
-          key={`truss-${cx}`}
-          span={span}
-          riseHeight={rise}
-          position={[cx, colH, 0]}
-        />
+        isArco ? (
+          <ArchedTruss
+            key={`truss-${cx}`}
+            span={span}
+            riseHeight={rise}
+            position={[cx, colH, 0]}
+          />
+        ) : (
+          <GabledTruss
+            key={`truss-${cx}`}
+            span={span}
+            riseHeight={rise}
+            position={[cx, colH, 0]}
+          />
+        )
       ))}
 
-      {/* ── Purlins (terças) along the arch, running the full length ── */}
-      {purlinArcPositions.map(({ z, y }, idx) => (
-        <mesh key={`purlin-${idx}`} position={[0, colH + y, z]}>
+      {/* ── Purlins (terças) along the roof, running the full length ── */}
+      {purlinPositions.map(({ z, y, rotation }, idx) => (
+        <mesh key={`purlin-${idx}`} position={[0, colH + y - (isArco ? 0 : 0.05), z]} rotation={rotation}>
           <boxGeometry args={[length, 0.12, 0.12]} />
           <meshStandardMaterial color={steel} roughness={0.5} metalness={0.5} />
         </mesh>
       ))}
 
-      {/* ── Curved roof surface ── */}
+      {/* ── Roof surface ── */}
       <group position={[0, colH, 0]}>
-        <CurvedRoof span={span} length={length} rise={rise} color={roofColor} />
+        {isArco ? (
+          <CurvedRoof span={span} length={length} rise={rise} color={roofColor} />
+        ) : (
+          <GabledRoof span={span} length={length} rise={rise} color={roofColor} />
+        )}
       </group>
 
       {/* ── Lateral closure walls ── */}
@@ -227,60 +285,91 @@ export const ShedVisualizer = () => {
   const length = config.profundidade;
   const span = config.vaoLivre;
   const colH = config.pillarType === "com-pilar" ? config.peireito : 6;
-  const maxDim = Math.max(length, span, colH);
+  const isAgricola = config.structureCategory === "agricola";
+  const isIndustrial = config.structureCategory === "industrial";
 
-  // Camera: positioned to reveal the arch — lower & slightly front/side
-  const camDist = maxDim * 1.5;
-
-  if (config.structureCategory === "industrial") {
-    return (
-      <div className="w-full h-full bg-gradient-to-b from-slate-800 to-slate-900 flex items-center justify-center">
-        <div className="text-center text-slate-400 space-y-4">
-          <div className="text-6xl">🏭</div>
-          <p className="text-lg font-semibold text-slate-300">Estrutura Industrial</p>
-          <p className="text-sm max-w-xs">Preencha o formulário ao lado para solicitar proposta personalizada com análise técnica.</p>
-        </div>
-      </div>
-    );
+  let maxDim = Math.max(length, span, colH);
+  if (isAgricola) {
+    const volumeM3 = config.siloCapacityBags * 0.075;
+    const diameter = Math.max(4, Math.pow(volumeM3, 0.35));
+    const cylinderHeight = Math.max(3, volumeM3 / (Math.PI * Math.pow(diameter / 2, 2)));
+    maxDim = Math.max(diameter, cylinderHeight) * 1.2;
   }
 
+  const camDist = maxDim * 1.6;
+
   return (
-    <div className="w-full h-full bg-gradient-to-b from-sky-300 to-sky-100">
-      <Canvas
-        shadows
-        camera={{
-          position: [camDist * 1.1, camDist * 0.55, camDist * 0.9],
-          fov: 48,
+    // Wrapper relativo para permitir overlay sobre o Canvas
+    <div className="w-full h-full relative">
+      {/* Canvas fica sempre montado — evita destruição do contexto WebGL */}
+      <div
+        className="w-full h-full"
+        style={{
+          // Quando industrial, ocultamos o canvas atrás do overlay mas não o desmontamos
+          visibility: isIndustrial ? "hidden" : "visible",
         }}
       >
-        <ambientLight intensity={0.55} />
-        <directionalLight
-          position={[60, 60, 40]}
-          intensity={1.3}
-          castShadow
-          shadow-mapSize-width={2048}
-          shadow-mapSize-height={2048}
-          shadow-camera-far={300}
-          shadow-camera-left={-80}
-          shadow-camera-right={80}
-          shadow-camera-top={80}
-          shadow-camera-bottom={-80}
-        />
-        <directionalLight position={[-30, 30, -20]} intensity={0.35} />
-        <hemisphereLight args={["#87CEEB", "#6B8E23", 0.45]} />
+        <div className="w-full h-full bg-gradient-to-b from-slate-200 to-slate-50">
+          <Canvas
+            shadows
+            gl={{
+              antialias: true,
+              toneMapping: THREE.ACESFilmicToneMapping,
+              toneMappingExposure: 1.1,
+            }}
+            camera={{
+              position: [camDist * 1.1, camDist * 0.55, camDist * 0.9],
+              fov: 48,
+            }}
+          >
+            <ambientLight intensity={0.4} />
+            <directionalLight
+              position={[60, 80, 40]}
+              intensity={1.5}
+              castShadow
+              shadow-mapSize-width={4096}
+              shadow-mapSize-height={4096}
+              shadow-bias={-0.0001}
+              shadow-camera-far={300}
+              shadow-camera-left={-80}
+              shadow-camera-right={80}
+              shadow-camera-top={80}
+              shadow-camera-bottom={-80}
+            />
+            <directionalLight position={[-30, 30, -20]} intensity={0.5} />
+            <hemisphereLight args={["#ffffff", "#e2e8f0", 0.6]} />
 
-        <OrbitControls
-          enablePan
-          enableZoom
-          enableRotate
-          minDistance={8}
-          maxDistance={maxDim * 5}
-          maxPolarAngle={Math.PI / 2.05}
-        />
+            <OrbitControls
+              enablePan
+              enableZoom
+              enableRotate
+              minDistance={8}
+              maxDistance={maxDim * 5}
+              maxPolarAngle={Math.PI / 2.05}
+            />
 
-        <Environment shedLength={length} shedWidth={span} />
-        <ShedStructure />
-      </Canvas>
+            <Environment
+              shedLength={isAgricola ? maxDim : length}
+              shedWidth={isAgricola ? maxDim : span}
+            />
+            {isAgricola ? <SiloStructure /> : <ShedStructure />}
+          </Canvas>
+        </div>
+      </div>
+
+      {/* Overlay Industrial — não desmonta o Canvas, apenas cobre */}
+      {isIndustrial && (
+        <div className="absolute inset-0 bg-gradient-to-b from-slate-800 to-slate-900 flex items-center justify-center">
+          <div className="text-center text-slate-400 space-y-4">
+            <div className="text-6xl">🏭</div>
+            <p className="text-lg font-semibold text-slate-300">Estrutura Industrial</p>
+            <p className="text-sm max-w-xs">
+              Preencha o formulário ao lado para solicitar proposta personalizada com análise
+              técnica.
+            </p>
+          </div>
+        </div>
+      )}
     </div>
   );
 };

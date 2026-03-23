@@ -81,7 +81,7 @@ const NavbarLanding = () => {
 };
 
 const HeroLanding = ({ porte }: { porte: string }) => {
-  const isMedio = porte === "medio";
+  const isComercial = porte === "comercial";
 
   return (
     <section id="hero-landing" className="relative min-h-[80vh] flex items-center justify-center overflow-hidden pt-16">
@@ -92,20 +92,20 @@ const HeroLanding = ({ porte }: { porte: string }) => {
       <div className="container relative z-10 mx-auto px-4 py-20 text-center">
         <div className="max-w-4xl mx-auto space-y-6">
           <p className="text-primary text-sm font-semibold uppercase tracking-widest">
-            {isMedio ? "Galpões de 1.000 a 3.000 m²" : "Galpões acima de 3.000 m²"}
+            {isComercial ? "Projetos para plantas comerciais e logísticas" : "Projetos para plantas industriais"}
           </p>
 
           <h1 className="text-4xl md:text-6xl font-bold leading-tight">
-            {isMedio ? (
-              <>Galpões Logísticos <span className="text-primary">Sob Medida</span> — Entrega em até 45 Dias</>
+            {isComercial ? (
+              <>Galpões <span className="text-primary">Comerciais</span> — Entrega Ágil e Funcional</>
             ) : (
-              <>Projetos de <span className="text-primary">Grande Porte</span> — Engenharia para Operações de Escala</>
+              <>Galpões <span className="text-primary">Industriais</span> — Engenharia para Operações de Escala</>
             )}
           </h1>
 
           <p className="text-lg text-muted-foreground leading-relaxed max-w-3xl mx-auto">
-            {isMedio
-              ? "Centros de distribuição, armazéns e operações logísticas com estrutura metálica de alta performance. Preço fechado em contrato, sem surpresas."
+            {isComercial
+              ? "Centros de distribuição, armazéns e operações comerciais com estrutura metálica de alta performance. Preço fechado em contrato, sem surpresas."
               : "Grandes centros logísticos e plantas industriais com vãos livres de até 60m. Projeto, fabricação e montagem com equipe própria e cronograma garantido."}
           </p>
 
@@ -131,7 +131,7 @@ const HeroLanding = ({ porte }: { porte: string }) => {
 
           <div className="pt-10 flex flex-wrap justify-center gap-x-10 gap-y-3 text-sm text-muted-foreground">
             <span>✓ Preço fechado em contrato</span>
-            <span>✓ {isMedio ? "Entrega em até 45 dias" : "Cronograma garantido"}</span>
+            <span>✓ {isComercial ? "Entrega em até 45 dias" : "Cronograma garantido"}</span>
             <span>✓ Financiamento com entrada de 5%</span>
           </div>
         </div>
@@ -142,8 +142,8 @@ const HeroLanding = ({ porte }: { porte: string }) => {
 
 const GalpaoLogistico = () => {
   const [searchParams] = useSearchParams();
-  const porte = searchParams.get("porte") || "medio";
-  const minArea = porte === "grande" ? 3000 : 1000;
+  const porte = searchParams.get("porte") || "comercial";
+  const minArea = porte === "industrial" ? 3000 : 1000;
 
   return (
     <div className="min-h-screen bg-background">

@@ -19,7 +19,7 @@ const PRICING = {
   pesoEstruturaM2: 12,      // kg/m² de planta
   pesoFechamentoM2: 7,      // kg/m² de fechamento
   maoDeObraPor600m2: 20_000,// R$ a cada 600 m²
-  raioIsencao: 60,          // km de Santarém sem mobilização
+  raioIsencao: 65,          // km de Santarém sem mobilização
   jurosMes: 0.025,          // 2,5 % a.m. (financiado)
 } as const;
 
@@ -98,9 +98,10 @@ export const SummaryCard = () => {
     ? areaFechamento * PRICING.montagemFechamento : 0;
   const valorMontagem = valorMontagemEst + valorMontagemFech;
 
-  // ── Mão de obra ───────────────────────────────────────────────────────────
+  // ── Mobilização de Equipe (Antiga Mão de obra) ────────────────────────────
   const blocos = Math.ceil(areaPlanta / 600);
-  const valorMaoDeObra = isMontado ? blocos * PRICING.maoDeObraPor600m2 : 0;
+  const isForaRaio = config.distanceKm > PRICING.raioIsencao;
+  const valorMobilizacaoEquipe = (isMontado && isForaRaio) ? blocos * PRICING.maoDeObraPor600m2 : 0;
 
   // ── Transporte / Mobilização ──────────────────────────────────────────────
   const pesoTotal =
@@ -109,13 +110,14 @@ export const SummaryCard = () => {
   const numCargas = Math.ceil(pesoTotal / 15_000);
   const valorTransporte =
     config.distanceKm > PRICING.raioIsencao
-      ? numCargas * config.distanceKm * PRICING.mobilizacaoKmCarga
+      ? numCargas * (config.distanceKm - PRICING.raioIsencao) * PRICING.mobilizacaoKmCarga
       : 0;
+  const kmCobrado = Math.max(0, config.distanceKm - PRICING.raioIsencao);
 
   // ── Total ─────────────────────────────────────────────────────────────────
   const valorTotal =
     valorEstrutura + valorCobertura + valorFechamento +
-    valorMontagem + valorMaoDeObra + valorTransporte;
+    valorMontagem + valorMobilizacaoEquipe + valorTransporte;
 
   const valorM2 = areaPlanta > 0 ? valorTotal / areaPlanta : 0;
 
@@ -160,6 +162,7 @@ export const SummaryCard = () => {
 
 🏗️ *Especificações:*
 • Estrutura: ${config.pillarType === "com-pilar" ? `Com Pilar (pé-direito ${pedireito}m)` : "Sem Pilar"}
+• Telhado: ${config.roofShape === "arco" ? "Arco" : "Duas Águas"}
 • Cobertura: ${config.roofTileType === "termoacustica" ? "Termoacústica EPS 30mm" : "Telha Simples 0,43mm"}
 • Fechamento: ${fechDesc}
 • Serviço: ${isMontado ? "Fabricação + Montagem" : "Apenas Fabricação"}
@@ -167,7 +170,7 @@ export const SummaryCard = () => {
 💰 *Resumo Financeiro:*
 • Estrutura: ${fmt(valorEstrutura)}
 • Cobertura: ${fmt(valorCobertura)}
-${temFechamento ? `• Fechamento: ${fmt(valorFechamento)}\n` : ""}${isMontado ? `• Montagem: ${fmt(valorMontagem)}\n• Mão de Obra: ${fmt(valorMaoDeObra)}\n` : ""}${valorTransporte > 0 ? `• Transporte (${numCargas} carga${numCargas > 1 ? "s" : ""}, ${config.distanceKm} km): ${fmt(valorTransporte)}\n` : ""}
+${temFechamento ? `• Fechamento: ${fmt(valorFechamento)}\n` : ""}${isMontado ? `• Montagem: ${fmt(valorMontagem)}\n` : ""}${valorMobilizacaoEquipe > 0 ? `• Mobilização de Equipe: ${fmt(valorMobilizacaoEquipe)}\n` : ""}${valorTransporte > 0 ? `• Frete de Material (${numCargas} carga${numCargas > 1 ? "s" : ""}, excedente ${kmCobrado}km): ${fmt(valorTransporte)}\n` : ""}
 • *TOTAL: ${fmt(valorTotal)}*
 • *Valor por m²: ${fmt(valorM2)}*
 • Pagamento: ${pgDesc}
@@ -199,6 +202,7 @@ Gostaria de uma proposta detalhada!`;
         "ESPECIFICAÇÕES",
         "-".repeat(30),
         `Estrutura        : ${config.pillarType === "com-pilar" ? `Com Pilar (pé-direito ${pedireito}m)` : "Sem Pilar"}`,
+        `Telhado          : ${config.roofShape === "arco" ? "Arco" : "Duas Águas"}`,
         `Cobertura        : ${config.roofTileType === "termoacustica" ? "Termoacústica EPS 30mm" : "Telha Simples 0,43mm"}`,
         `Fechamento       : ${fechDesc}`,
         ...(temFechamento ? [`Área Fechamento  : ${fmtN(areaFechamento)} m²`] : []),
@@ -210,8 +214,9 @@ Gostaria de uma proposta detalhada!`;
         `Estrutura        : ${fmt(valorEstrutura)}`,
         `Cobertura        : ${fmt(valorCobertura)}`,
         ...(temFechamento ? [`Fechamento       : ${fmt(valorFechamento)}`] : []),
-        ...(isMontado ? [`Montagem         : ${fmt(valorMontagem)}`, `Mão de Obra      : ${fmt(valorMaoDeObra)}`] : []),
-        ...(valorTransporte > 0 ? [`Transporte       : ${fmt(valorTransporte)}`] : []),
+        ...(isMontado ? [`Montagem         : ${fmt(valorMontagem)}`] : []),
+        ...(valorMobilizacaoEquipe > 0 ? [`Mobilização Eq.  : ${fmt(valorMobilizacaoEquipe)}`] : []),
+        ...(valorTransporte > 0 ? [`Frete Material   : ${fmt(valorTransporte)}`] : []),
         "",
         `TOTAL ESTIMADO   : ${fmt(valorTotal)}`,
         `VALOR POR M²     : ${fmt(valorM2)}`,
@@ -233,7 +238,7 @@ Gostaria de uma proposta detalhada!`;
         "",
         "=".repeat(46),
         "* Valores estimados. Orçamento final conforme especificações técnicas.",
-        "* Mobilização cobrada apenas para obras fora de 60 km de Santarém — PA.",
+        "* Mobilização cobrada apenas para km excedente de 65 km de Santarém — PA.",
       ].join("\n");
 
       const blob = new Blob([content], { type: "text/plain;charset=utf-8" });
@@ -251,7 +256,7 @@ Gostaria de uma proposta detalhada!`;
     toast.success("Solicitação enviada! Nossa equipe entrará em contato em breve.", { duration: 5000 });
 
   // ══ RENDER INDUSTRIAL ══════════════════════════════════════════════════════
-  if (!isComercial) {
+  if (config.structureCategory === "industrial") {
     const allFilled =
       config.industrialName && config.industrialEmail &&
       config.industrialPhone && config.industrialUseType;
@@ -318,6 +323,102 @@ Gostaria de uma proposta detalhada!`;
     );
   }
 
+  // ══ RENDER AGRÍCOLA (SILOS) ════════════════════════════════════════════════
+  if (config.structureCategory === "agricola") {
+    const sacas = config.siloCapacityBags || 0;
+    const volumeTon = (sacas * 60) / 1000;
+    
+    const baseSiloPrice = sacas * 40; // ~R$ 40 por saca
+    const conicoPrice = config.siloType === "fundo-conico" ? baseSiloPrice * 0.30 : 0; // +30% para chaparia reforçada e estrutura do fundo cônico
+    const passarelaPrice = config.siloPassarela ? 15000 : 0;
+    const aeracaoPrice = config.siloAeracao ? sacas * 8 : 0;
+    
+    const valorTotalSilo = baseSiloPrice + conicoPrice + passarelaPrice + aeracaoPrice;
+    
+    const buildWhatsAppSilo = () => {
+      const msg = `🌾 *Orçamento Silo Metálico — Apex Steel Forge*
+      
+📐 *Especificações:*
+• Capacidade: ${sacas.toLocaleString("pt-BR")} sacas (${volumeTon} Toneladas)
+• Fundo: ${config.siloType === "fundo-conico" ? "Cônico Elevado" : "Plano"}
+• Passarela Superior: ${config.siloPassarela ? "Sim" : "Não"}
+• Aeração/Termometria: ${config.siloAeracao ? "Sim" : "Não"}
+
+💰 *Resumo Financeiro:*
+• Silo Base: ${fmt(baseSiloPrice)}
+${conicoPrice > 0 ? `• Adicional Fundo Cônico: ${fmt(conicoPrice)}\n` : ""}${passarelaPrice > 0 ? `• Passarela de Inspeção: ${fmt(passarelaPrice)}\n` : ""}${aeracaoPrice > 0 ? `• Sistema de Aeração: ${fmt(aeracaoPrice)}\n` : ""}
+• *TOTAL ESTIMADO: ${fmt(valorTotalSilo)}*
+
+Gostaria de uma proposta detalhada para este projeto agrícola!`;
+      return `https://wa.me/5593991910861?text=${encodeURIComponent(msg)}`;
+    };
+
+    return (
+      <Card className="border-border bg-card">
+        <CardHeader className="bg-gradient-to-r from-emerald-600 to-green-500 text-white rounded-t-xl">
+          <CardTitle className="flex items-center gap-2 text-white">
+            <Calculator className="w-5 h-5" />
+            Resumo do Silo
+          </CardTitle>
+          <p className="text-sm text-white/80">Estimativa para armazenagem</p>
+        </CardHeader>
+
+        <CardContent className="pt-5 space-y-4">
+          <div className="bg-muted/30 rounded-lg p-3 grid grid-cols-2 gap-2 text-center text-sm">
+            <div>
+              <p className="text-muted-foreground text-xs">Capacidade (Sacas)</p>
+              <p className="font-bold text-foreground">{sacas.toLocaleString("pt-BR")}</p>
+            </div>
+            <div>
+              <p className="text-muted-foreground text-xs">Volume (Toneladas)</p>
+              <p className="font-bold text-primary">{volumeTon.toLocaleString("pt-BR")} t</p>
+            </div>
+          </div>
+
+          <Separator />
+
+          <div className="space-y-2.5">
+            <LineItem
+              label="Silo Estruturado"
+              sub={`Fundo ${config.siloType === "fundo-conico" ? "Cônico (+30%)" : "Plano"}`}
+              value={fmt(baseSiloPrice + conicoPrice)}
+            />
+            {config.siloPassarela && (
+              <LineItem label="Passarela Superior" value={fmt(passarelaPrice)} />
+            )}
+            {config.siloAeracao && (
+              <LineItem label="Aeração e Termometria" sub="R$ 8,00 / saca" value={fmt(aeracaoPrice)} />
+            )}
+          </div>
+
+          <Separator className="bg-primary/20" />
+
+          <div className="flex justify-between items-center">
+            <span className="text-lg font-bold text-foreground">Total do Investimento</span>
+            <span className="text-2xl font-bold text-primary">{fmt(valorTotalSilo)}</span>
+          </div>
+
+          <Separator className="bg-border/50" />
+
+          <div className="space-y-2 pt-1">
+            <Button
+              onClick={() => window.open(buildWhatsAppSilo(), "_blank")}
+              className="w-full bg-emerald-600 hover:bg-emerald-700 shadow-lg font-semibold text-white"
+            >
+              Solicitar via WhatsApp
+            </Button>
+          </div>
+          
+          <div className="bg-muted/30 p-3 rounded-lg text-xs text-muted-foreground space-y-1 mt-4">
+            <p><strong>Incluso:</strong> Chaparia, teto, parafusos, vedação, projeto estrutural de fabricação.</p>
+            <p><strong>Não incluso:</strong> Fundação civil (base do silo), frete e montagem no local.</p>
+            <p>* Valores estimativos sujeitos a alteração técnica.</p>
+          </div>
+        </CardContent>
+      </Card>
+    );
+  }
+
   // ══ RENDER COMERCIAL ═══════════════════════════════════════════════════════
   return (
     <Card className="border-border bg-card">
@@ -374,7 +475,7 @@ Gostaria de uma proposta detalhada!`;
             value={fmt(valorEstrutura)}
           />
           <LineItem
-            label={`Cobertura (${config.roofTileType === "termoacustica" ? "Termoacústica" : "Simples"})`}
+            label={`Cobertura (${config.roofTileType === "termoacustica" ? "Termoacústica" : "Simples"} - ${config.roofShape === "arco" ? "Arco" : "Duas Águas"})`}
             sub={`R$ ${precoTelha}/m² × ${areaPlanta} m²`}
             value={fmt(valorCobertura)}
           />
@@ -395,24 +496,25 @@ Gostaria de uma proposta detalhada!`;
           )}
 
           {isMontado && (
-            <>
-              <LineItem
-                label="Montagem"
-                sub={`Estrutura R$ 50/m²${temFechamento ? " · Fechamento R$ 25/m²" : ""}`}
-                value={fmt(valorMontagem)}
-              />
-              <LineItem
-                label="Mão de Obra de Montagem"
-                sub={`R$ 20.000 × ${blocos} bloco${blocos > 1 ? "s" : ""} de 600 m²`}
-                value={fmt(valorMaoDeObra)}
-              />
-            </>
+            <LineItem
+              label="Montagem"
+              sub={`Estrutura R$ 50/m²${temFechamento ? " · Fechamento R$ 25/m²" : ""}`}
+              value={fmt(valorMontagem)}
+            />
+          )}
+
+          {valorMobilizacaoEquipe > 0 && (
+            <LineItem
+              label="Mobilização de Equipe"
+              sub={`R$ 20.000 × ${blocos} bloco${blocos > 1 ? "s" : ""} de 600 m² (fora de Santarém)`}
+              value={fmt(valorMobilizacaoEquipe)}
+            />
           )}
 
           {valorTransporte > 0 && (
             <LineItem
-              label="Transporte / Mobilização"
-              sub={`${numCargas} carga${numCargas > 1 ? "s" : ""} × ${config.distanceKm} km × R$ 18/km`}
+              label="Frete de Material"
+              sub={`${numCargas} carga${numCargas > 1 ? "s" : ""} × ${kmCobrado} km (excedente) × R$ 18/km`}
               value={fmt(valorTransporte)}
             />
           )}
@@ -513,7 +615,7 @@ Gostaria de uma proposta detalhada!`;
         <div className="bg-muted/30 p-3 rounded-lg text-xs text-muted-foreground space-y-1">
           <p><strong>Incluso:</strong> Estrutura metálica, cobertura{temFechamento ? ", fechamento" : ""}{isMontado ? ", montagem" : ""}.</p>
           <p><strong>Não incluso:</strong> Fundação, piso, terraplanagem, projetos executivos.</p>
-          <p>* Mobilização cobrada apenas para obras fora de 60 km de Santarém — PA.</p>
+          <p>* Mobilização cobrada apenas pelos km que excedem 65 km de Santarém — PA.</p>
           <p>* Valores estimados. Orçamento final conforme especificações técnicas.</p>
         </div>
       </CardContent>

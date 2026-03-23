@@ -1,10 +1,11 @@
 import { createContext, useContext, useState, ReactNode } from "react";
 
-export type StructureCategory = "comercial" | "industrial";
+export type StructureCategory = "comercial" | "industrial" | "agricola";
 export type VaoLivre = 10 | 14 | 16 | 20;
 export type PillarType = "com-pilar" | "sem-pilar";
 export type Peireito = 6 | 7;
 export type RoofTileType = "simples" | "termoacustica";
+export type RoofShape = "arco" | "duas-aguas";
 /** "sem-fechamento" | "parcial" = 80% da altura | "total" = 100% da altura */
 export type ClosureOption = "sem-fechamento" | "parcial" | "total";
 export type ServiceType = "fabricado" | "fabricado-montado";
@@ -24,6 +25,7 @@ export interface ShedConfig {
 
   // ── Cobertura ─────────────────────────────────────────────────────────────
   roofTileType: RoofTileType;
+  roofShape: RoofShape;
 
   // ── Fechamento lateral (3 opções diretas) ─────────────────────────────────
   closureOption: ClosureOption;
@@ -50,6 +52,12 @@ export interface ShedConfig {
   industrialEmail: string;
   industrialPhone: string;
   industrialUseType: string;
+
+  // ── Agrícola (Silos) ──────────────────────────────────────────────────────
+  siloCapacityBags: number;
+  siloType: "fundo-plano" | "fundo-conico";
+  siloPassarela: boolean;
+  siloAeracao: boolean;
 }
 
 interface ShedContextType {
@@ -67,6 +75,7 @@ const defaultConfig: ShedConfig = {
   peireito: 6,
 
   roofTileType: "simples",
+  roofShape: "duas-aguas",
 
   closureOption: "sem-fechamento",
 
@@ -86,6 +95,11 @@ const defaultConfig: ShedConfig = {
   industrialEmail: "",
   industrialPhone: "",
   industrialUseType: "",
+
+  siloCapacityBags: 20000,
+  siloType: "fundo-plano",
+  siloPassarela: false,
+  siloAeracao: true,
 };
 
 const ShedContext = createContext<ShedContextType | undefined>(undefined);
