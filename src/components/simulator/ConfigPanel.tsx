@@ -171,27 +171,6 @@ export const ConfigPanel = () => {
             <section>
               <SectionTitle icon={Layers} title="Cobertura" />
               
-              <div className="mb-6">
-                <Label className="text-sm text-muted-foreground mb-3 block">Tipo de Telhado</Label>
-                <div className="grid grid-cols-2 gap-3">
-                  {(["duas-aguas", "arco"] as const).map((shape) => (
-                    <button
-                      key={shape}
-                      type="button"
-                      onClick={() => updateConfig({ roofShape: shape })}
-                      className={cn(
-                        "py-3 rounded-xl border-2 text-sm font-semibold transition-all",
-                        config.roofShape === shape
-                          ? "border-primary bg-primary/10 text-primary"
-                          : "border-border hover:border-primary/40 text-muted-foreground",
-                      )}
-                    >
-                      {shape === "arco" ? "Arco" : "Duas Águas"}
-                    </button>
-                  ))}
-                </div>
-              </div>
-
               <Label className="text-sm text-muted-foreground mb-3 block">Material da Telha</Label>
               <RadioGroup
                 value={config.roofTileType}

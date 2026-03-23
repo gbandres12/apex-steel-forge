@@ -162,7 +162,7 @@ export const SummaryCard = () => {
 
 🏗️ *Especificações:*
 • Estrutura: ${config.pillarType === "com-pilar" ? `Com Pilar (pé-direito ${pedireito}m)` : "Sem Pilar"}
-• Telhado: ${config.roofShape === "arco" ? "Arco" : "Duas Águas"}
+• Telhado: Duas Águas
 • Cobertura: ${config.roofTileType === "termoacustica" ? "Termoacústica EPS 30mm" : "Telha Simples 0,43mm"}
 • Fechamento: ${fechDesc}
 • Serviço: ${isMontado ? "Fabricação + Montagem" : "Apenas Fabricação"}
@@ -202,7 +202,7 @@ Gostaria de uma proposta detalhada!`;
         "ESPECIFICAÇÕES",
         "-".repeat(30),
         `Estrutura        : ${config.pillarType === "com-pilar" ? `Com Pilar (pé-direito ${pedireito}m)` : "Sem Pilar"}`,
-        `Telhado          : ${config.roofShape === "arco" ? "Arco" : "Duas Águas"}`,
+        `Telhado          : Duas Águas`,
         `Cobertura        : ${config.roofTileType === "termoacustica" ? "Termoacústica EPS 30mm" : "Telha Simples 0,43mm"}`,
         `Fechamento       : ${fechDesc}`,
         ...(temFechamento ? [`Área Fechamento  : ${fmtN(areaFechamento)} m²`] : []),
@@ -475,7 +475,7 @@ Gostaria de uma proposta detalhada para este projeto agrícola!`;
             value={fmt(valorEstrutura)}
           />
           <LineItem
-            label={`Cobertura (${config.roofTileType === "termoacustica" ? "Termoacústica" : "Simples"} - ${config.roofShape === "arco" ? "Arco" : "Duas Águas"})`}
+            label={`Cobertura (${config.roofTileType === "termoacustica" ? "Termoacústica" : "Simples"} - Duas Águas)`}
             sub={`R$ ${precoTelha}/m² × ${areaPlanta} m²`}
             value={fmt(valorCobertura)}
           />

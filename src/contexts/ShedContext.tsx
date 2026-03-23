@@ -5,7 +5,7 @@ export type VaoLivre = 10 | 14 | 16 | 20;
 export type PillarType = "com-pilar" | "sem-pilar";
 export type Peireito = 6 | 7;
 export type RoofTileType = "simples" | "termoacustica";
-export type RoofShape = "arco" | "duas-aguas";
+export type RoofShape = "duas-aguas";
 /** "sem-fechamento" | "parcial" = 80% da altura | "total" = 100% da altura */
 export type ClosureOption = "sem-fechamento" | "parcial" | "total";
 export type ServiceType = "fabricado" | "fabricado-montado";
