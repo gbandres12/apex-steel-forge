@@ -1,6 +1,4 @@
 import { useShed } from "@/contexts/ShedContext";
-import * as THREE from "three";
-import { useMemo } from "react";
 
 export const SiloStructure = () => {
   const { config } = useShed();
@@ -23,24 +21,24 @@ export const SiloStructure = () => {
 
   return (
     <group position={[0, isConico ? bottomHeight : 0, 0]}>
-      {/* Corpo Cilíndrico */}
+      {/* Corpo Cilíndrico — 64 segmentos para eliminar costura visível */}
       <mesh position={[0, cylinderHeight / 2, 0]} castShadow receiveShadow>
-        <cylinderGeometry args={[radius, radius, cylinderHeight, 32]} />
-        <meshStandardMaterial color={steelPath} roughness={0.6} metalness={0.7} />
+        <cylinderGeometry args={[radius, radius, cylinderHeight, 64]} />
+        <meshStandardMaterial color={steelPath} roughness={0.55} metalness={0.45} />
       </mesh>
       
       {/* Teto Cônico */}
       <mesh position={[0, cylinderHeight + roofHeight / 2, 0]} castShadow receiveShadow>
-        <coneGeometry args={[radius * 1.05, roofHeight, 32]} />
-        <meshStandardMaterial color={steelPath} roughness={0.5} metalness={0.8} />
+        <coneGeometry args={[radius * 1.05, roofHeight, 64]} />
+        <meshStandardMaterial color={steelPath} roughness={0.5} metalness={0.45} />
       </mesh>
       
       {/* Fundo Cônico Elevado (se aplicável) */}
       {isConico && (
         <>
           <mesh position={[0, -bottomHeight / 2, 0]} castShadow receiveShadow>
-            <cylinderGeometry args={[radius, 0.5, bottomHeight, 32]} />
-            <meshStandardMaterial color={steelPath} roughness={0.6} metalness={0.7} />
+            <cylinderGeometry args={[radius, 0.5, bottomHeight, 64]} />
+            <meshStandardMaterial color={steelPath} roughness={0.55} metalness={0.45} />
           </mesh>
           {/* Suportes do fundo cônico (pilares em anel) */}
           {Array.from({ length: 12 }).map((_, i) => {

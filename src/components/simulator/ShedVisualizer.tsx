@@ -286,6 +286,7 @@ export const ShedVisualizer = () => {
   const span = config.vaoLivre;
   const colH = config.pillarType === "com-pilar" ? config.peireito : 6;
   const isAgricola = config.structureCategory === "agricola";
+  const isIndustrial = config.structureCategory === "industrial";
 
   let maxDim = Math.max(length, span, colH);
   if (isAgricola) {
@@ -295,60 +296,80 @@ export const ShedVisualizer = () => {
     maxDim = Math.max(diameter, cylinderHeight) * 1.2;
   }
 
-  // Camera: positioned to reveal the arch — lower & slightly front/side
   const camDist = maxDim * 1.6;
 
-  if (config.structureCategory === "industrial") {
-    return (
-      <div className="w-full h-full bg-gradient-to-b from-slate-800 to-slate-900 flex items-center justify-center">
-        <div className="text-center text-slate-400 space-y-4">
-          <div className="text-6xl">🏭</div>
-          <p className="text-lg font-semibold text-slate-300">Estrutura Industrial</p>
-          <p className="text-sm max-w-xs">Preencha o formulário ao lado para solicitar proposta personalizada com análise técnica.</p>
-        </div>
-      </div>
-    );
-  }
-
   return (
-    <div className="w-full h-full bg-gradient-to-b from-slate-200 to-slate-50">
-      <Canvas
-        shadows
-        gl={{ antialias: true, toneMapping: THREE.ACESFilmicToneMapping, toneMappingExposure: 1.1 }}
-        camera={{
-          position: [camDist * 1.1, camDist * 0.55, camDist * 0.9],
-          fov: 48,
+    // Wrapper relativo para permitir overlay sobre o Canvas
+    <div className="w-full h-full relative">
+      {/* Canvas fica sempre montado — evita destruição do contexto WebGL */}
+      <div
+        className="w-full h-full"
+        style={{
+          // Quando industrial, ocultamos o canvas atrás do overlay mas não o desmontamos
+          visibility: isIndustrial ? "hidden" : "visible",
         }}
       >
-        <ambientLight intensity={0.4} />
-        <directionalLight
-          position={[60, 80, 40]}
-          intensity={1.5}
-          castShadow
-          shadow-mapSize-width={4096}
-          shadow-mapSize-height={4096}
-          shadow-bias={-0.0001}
-          shadow-camera-far={300}
-          shadow-camera-left={-80}
-          shadow-camera-right={80}
-          shadow-camera-top={80}
-          shadow-camera-bottom={-80}
-        />
-        <directionalLight position={[-30, 30, -20]} intensity={0.5} />
-        <hemisphereLight args={["#ffffff", "#e2e8f0", 0.6]} />
+        <div className="w-full h-full bg-gradient-to-b from-slate-200 to-slate-50">
+          <Canvas
+            shadows
+            gl={{
+              antialias: true,
+              toneMapping: THREE.ACESFilmicToneMapping,
+              toneMappingExposure: 1.1,
+            }}
+            camera={{
+              position: [camDist * 1.1, camDist * 0.55, camDist * 0.9],
+              fov: 48,
+            }}
+          >
+            <ambientLight intensity={0.4} />
+            <directionalLight
+              position={[60, 80, 40]}
+              intensity={1.5}
+              castShadow
+              shadow-mapSize-width={4096}
+              shadow-mapSize-height={4096}
+              shadow-bias={-0.0001}
+              shadow-camera-far={300}
+              shadow-camera-left={-80}
+              shadow-camera-right={80}
+              shadow-camera-top={80}
+              shadow-camera-bottom={-80}
+            />
+            <directionalLight position={[-30, 30, -20]} intensity={0.5} />
+            <hemisphereLight args={["#ffffff", "#e2e8f0", 0.6]} />
 
-        <OrbitControls
-          enablePan
-          enableZoom
-          enableRotate
-          minDistance={8}
-          maxDistance={maxDim * 5}
-          maxPolarAngle={Math.PI / 2.05}
-        />
+            <OrbitControls
+              enablePan
+              enableZoom
+              enableRotate
+              minDistance={8}
+              maxDistance={maxDim * 5}
+              maxPolarAngle={Math.PI / 2.05}
+            />
 
-        <Environment shedLength={isAgricola ? maxDim : length} shedWidth={isAgricola ? maxDim : span} />
-        {isAgricola ? <SiloStructure /> : <ShedStructure />}
-      </Canvas>
+            <Environment
+              shedLength={isAgricola ? maxDim : length}
+              shedWidth={isAgricola ? maxDim : span}
+            />
+            {isAgricola ? <SiloStructure /> : <ShedStructure />}
+          </Canvas>
+        </div>
+      </div>
+
+      {/* Overlay Industrial — não desmonta o Canvas, apenas cobre */}
+      {isIndustrial && (
+        <div className="absolute inset-0 bg-gradient-to-b from-slate-800 to-slate-900 flex items-center justify-center">
+          <div className="text-center text-slate-400 space-y-4">
+            <div className="text-6xl">🏭</div>
+            <p className="text-lg font-semibold text-slate-300">Estrutura Industrial</p>
+            <p className="text-sm max-w-xs">
+              Preencha o formulário ao lado para solicitar proposta personalizada com análise
+              técnica.
+            </p>
+          </div>
+        </div>
+      )}
     </div>
   );
 };
