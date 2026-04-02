@@ -189,10 +189,12 @@ export const ShedVisualizer = () => {
         <div className="w-full h-full bg-gradient-to-b from-slate-200 to-slate-50">
           <Canvas
             shadows
+            dpr={[1, 1.5]}
             gl={{
               antialias: true,
               toneMapping: THREE.ACESFilmicToneMapping,
               toneMappingExposure: 1.1,
+              powerPreference: "high-performance",
             }}
             camera={{
               position: [camDist * 1.1, camDist * 0.55, camDist * 0.9],
@@ -204,9 +206,9 @@ export const ShedVisualizer = () => {
               position={[60, 80, 40]}
               intensity={1.5}
               castShadow
-              shadow-mapSize-width={4096}
-              shadow-mapSize-height={4096}
-              shadow-bias={-0.0001}
+              shadow-mapSize-width={1024}
+              shadow-mapSize-height={1024}
+              shadow-bias={-0.0005}
               shadow-camera-far={300}
               shadow-camera-left={-80}
               shadow-camera-right={80}
