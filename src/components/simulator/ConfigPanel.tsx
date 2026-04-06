@@ -62,7 +62,7 @@ export const ConfigPanel = () => {
                 {cat === "comercial" && <Building2 className="w-5 h-5 mb-1.5" />}
                 {cat === "industrial" && <Factory className="w-5 h-5 mb-1.5" />}
                 {cat === "agricola" && <Wheat className="w-5 h-5 mb-1.5" />}
-                {cat === "comercial" ? "Logístico" : cat === "industrial" ? "Industrial" : "Silos / Agro"}
+                {cat === "comercial" ? "Galpão Comercial" : cat === "industrial" ? "Industrial" : "Silos / Agro"}
               </button>
             ))}
           </div>
@@ -210,6 +210,37 @@ export const ConfigPanel = () => {
                   </label>
                 ))}
               </RadioGroup>
+
+              <div className="mt-4 pt-4 border-t border-border/50">
+                <Label className="text-sm text-muted-foreground mb-3 block">Cor da Telha</Label>
+                <div className="grid grid-cols-5 gap-2">
+                  {[
+                    { value: "galvalume", color: "#e2e8f0", label: "Zinco" },
+                    { value: "branco", color: "#f8fafc", label: "Branca" },
+                    { value: "azul", color: "#0ea5e9", label: "Azul" },
+                    { value: "verde", color: "#22c55e", label: "Verde" },
+                    { value: "vermelho", color: "#ef4444", label: "Vermelha" },
+                  ].map((opt) => (
+                    <button
+                      key={opt.value}
+                      type="button"
+                      onClick={() => updateConfig({ roofColor: opt.value as any })}
+                      title={opt.label}
+                      className={cn(
+                        "h-10 rounded-lg border-2 transition-all flex items-center justify-center",
+                        config.roofColor === opt.value
+                          ? "border-primary scale-110 ring-2 ring-primary/20"
+                          : "border-border/50 hover:scale-105"
+                      )}
+                      style={{ backgroundColor: opt.color }}
+                    >
+                      {config.roofColor === opt.value && (
+                        <div className={`w-2.5 h-2.5 rounded-full ${opt.value === 'branco' || opt.value === 'galvalume' ? 'bg-slate-900' : 'bg-white'}`} />
+                      )}
+                    </button>
+                  ))}
+                </div>
+              </div>
             </section>
 
             {/* ── 6. FECHAMENTO LATERAL — 3 opções diretas ── */}

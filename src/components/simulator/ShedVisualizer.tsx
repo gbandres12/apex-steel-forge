@@ -58,7 +58,17 @@ const ShedStructure = () => {
   const colH = config.pillarType === "com-pilar" ? config.peireito : 6;
   const rise = Math.max(1.2, span * 0.22); // ≈ 22% do vão, mín 1,2 m
 
-  const roofColor = config.roofTileType === "termoacustica" ? "#C8C8C8" : "#A0A8B0";
+  const getHexColor = (c: string) => {
+    switch (c) {
+      case "galvalume": return "#e2e8f0";
+      case "branco": return "#f8fafc";
+      case "azul": return "#0ea5e9";
+      case "verde": return "#22c55e";
+      case "vermelho": return "#ef4444";
+      default: return "#e2e8f0";
+    }
+  };
+  const roofColorHex = getHexColor(config.roofColor);
   const steel = "#8B1010";
 
   // Grade de pilares: a cada 6 m ao longo de X
@@ -126,7 +136,7 @@ const ShedStructure = () => {
 
       {/* ── Superfície do telhado ── */}
       <group position={[0, colH, 0]}>
-        <GabledRoof span={span} length={length} rise={rise} color={roofColor} />
+        <GabledRoof span={span} length={length} rise={rise} color={roofColorHex} />
       </group>
 
       {/* ── Fechamento lateral ── */}
@@ -134,19 +144,19 @@ const ShedStructure = () => {
         <>
           <mesh position={[-length / 2, wallH / 2, 0]}>
             <boxGeometry args={[0.08, wallH, span]} />
-            <meshStandardMaterial color="#B0C4DE" transparent opacity={0.35} side={THREE.DoubleSide} />
+            <meshStandardMaterial color={roofColorHex} transparent opacity={0.5} side={THREE.DoubleSide} />
           </mesh>
           <mesh position={[length / 2, wallH / 2, 0]}>
             <boxGeometry args={[0.08, wallH, span]} />
-            <meshStandardMaterial color="#B0C4DE" transparent opacity={0.35} side={THREE.DoubleSide} />
+            <meshStandardMaterial color={roofColorHex} transparent opacity={0.5} side={THREE.DoubleSide} />
           </mesh>
           <mesh position={[0, wallH / 2, -span / 2]}>
             <boxGeometry args={[length, wallH, 0.08]} />
-            <meshStandardMaterial color="#B0C4DE" transparent opacity={0.35} side={THREE.DoubleSide} />
+            <meshStandardMaterial color={roofColorHex} transparent opacity={0.5} side={THREE.DoubleSide} />
           </mesh>
           <mesh position={[0, wallH / 2, span / 2]}>
             <boxGeometry args={[length, wallH, 0.08]} />
-            <meshStandardMaterial color="#B0C4DE" transparent opacity={0.35} side={THREE.DoubleSide} />
+            <meshStandardMaterial color={roofColorHex} transparent opacity={0.5} side={THREE.DoubleSide} />
           </mesh>
         </>
       )}

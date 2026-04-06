@@ -10,6 +10,7 @@ export type RoofShape = "duas-aguas";
 export type ClosureOption = "sem-fechamento" | "parcial" | "total";
 export type ServiceType = "fabricado" | "fabricado-montado";
 export type PaymentType = "financiado" | "medicoes";
+export type RoofColor = "galvalume" | "branco" | "azul" | "verde" | "vermelho";
 
 export interface ShedConfig {
   // ── Categoria ─────────────────────────────────────────────────────────────
@@ -26,6 +27,7 @@ export interface ShedConfig {
   // ── Cobertura ─────────────────────────────────────────────────────────────
   roofTileType: RoofTileType;
   roofShape: RoofShape;
+  roofColor: RoofColor;
 
   // ── Fechamento lateral (3 opções diretas) ─────────────────────────────────
   closureOption: ClosureOption;
@@ -76,6 +78,7 @@ const defaultConfig: ShedConfig = {
 
   roofTileType: "simples",
   roofShape: "duas-aguas",
+  roofColor: "galvalume",
 
   closureOption: "sem-fechamento",
 

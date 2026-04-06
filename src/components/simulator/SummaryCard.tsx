@@ -148,8 +148,8 @@ export const SummaryCard = () => {
 
     const pgDesc =
       config.paymentType === "financiado"
-        ? `Financiado — 40% entrada + 24×${fmt(parcelaFinanciado)} (2,5% a.m.)`
-        : `Medições — 5% entrada + 25% em 30 dias + saldo em obra`;
+        ? `Financiado — 40% entrada (${fmt(entradaFinanciado)}) + 24×${fmt(parcelaFinanciado)} (2,5% a.m.)`
+        : `Medições — 5% entrada (${fmt(entrada5)}) + 25% em 30 dias + saldo em obra`;
 
     const msg = isEspecialista
       ? `Olá! Gostaria de falar com um especialista sobre um galpão metálico.\n\n📐 ${config.vaoLivre}m × ${config.profundidade}m (${areaPlanta} m²)\n💰 Total estimado: ${fmt(valorTotal)}`
